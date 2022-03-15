@@ -18,4 +18,5 @@ implement in ds-client.c [1]
 
 > project notes
 
+- RUN Wireshark and see what the existing client/server do!
 - Write in java, compile like in workshop example!
