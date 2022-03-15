@@ -73,7 +73,7 @@ class dsclient {
             socket = new Socket("localhost", 6666);
             dout = new DataOutputStream(socket.getOutputStream());
             while (!attemptOk()) {
-
+                // TODO put while loop in method and simply call this method here?
             }
             dout.close();
             socket.close();
