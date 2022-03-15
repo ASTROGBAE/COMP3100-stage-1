@@ -15,3 +15,7 @@ implement in ds-client.c [1]
 
 1. Where is an example of ds-client.c? Just use the server as an example???
 2. What does ds-system.xml do?
+
+> project notes
+
+- Write in java, compile like in workshop example!
