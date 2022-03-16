@@ -3,7 +3,10 @@ import java.net.*;
 
 public class Client {
 
-    // fields
+    // client fields
+    boolean running;
+
+    // socket fields
     Socket socket;
     DataInputStream din;
     DataOutputStream dout;
@@ -27,16 +30,46 @@ public class Client {
         try {
             socket = new Socket(address, port);
             dout = new DataOutputStream(socket.getOutputStream());
+            running = true;
         } catch (Exception e) {
             System.out.println(e);
             // TODO write out what will happen if this fails???
         }
     }
 
+    void close() {
+        try {
+            socket.close();
+            din.close();
+            dout.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    void run() throws Exception {
+        while (running) {
+            System.out.println("Starting server... ");
+            int i = 1;
+            int sleep = 600;
+            while (!attemptOk()) {
+                Thread.sleep(sleep); // InterruptedException
+                System.out.println(String.format("Attemping OK (%s) attempt, sleep %sms", i, sleep));
+                i++;
+            }
+            if (attemptAuth()) {
+                System.out.println("Auth successful");
+            } else {
+                System.out.println("Auth unsuccessful");
+            }
+        }
+    }
+
     // other methods
     // TODO how to establish and keep a connection?
 
-    boolean attemptOk() {
+    private boolean attemptOk() {
         try {
             dout.writeUTF(msgOk); // send ok to server
             dout.flush();
@@ -48,7 +81,7 @@ public class Client {
         return false;
     }
 
-    boolean attemptAuth() {
+    private boolean attemptAuth() {
         try {
             dout.writeUTF(msgAuth); // send info to server
             dout.flush();
