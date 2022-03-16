@@ -34,6 +34,7 @@ public class Client {
     }
 
     // other methods
+    // TODO how to establish and keep a connection?
 
     boolean attemptOk() {
         try {
