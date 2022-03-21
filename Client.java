@@ -5,10 +5,11 @@ public class Client {
 
     // client fields
     boolean running;
+    String user;
 
     // socket fields
     Socket socket;
-    DataInputStream din;
+    BufferedReader din;
     DataOutputStream dout;
 
     // client messages
@@ -26,12 +27,15 @@ public class Client {
     public Client(String address, int port) {
         try {
             socket = new Socket(address, port);
+            din = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             dout = new DataOutputStream(socket.getOutputStream());
+            user = System.getProperty("user.name");
             running = true;
         } catch (Exception e) {
             System.out.println(e);
             // TODO write out what will happen if this fails???
         }
+        // if all works, add in normal stuff...
     }
 
     void close() {
@@ -78,12 +82,25 @@ public class Client {
      * src: distus-MQ section: 8
      */
 
+    // helper methods (put somewhere else???)
+    private void printWelcome() {
+        System.out.println("Greetings " + user);
+        System.out.println(
+                String.format("Target IP: %s Target Port: %s", socket.getInetAddress(), socket.getPort()));
+        System.out.println(
+                String.format("Local IP: %s Local Port: %s", socket.getLocalAddress(), socket.getLocalPort()));
+    }
+
+    private String getMessage() throws IOException {
+        return din.readLine();
+    }
+
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: connection ~~~~~~~~~~~~~~~
 
     private boolean attemptOk() {
         String msgOk = "HELO";
         try {
-            dout.writeUTF(msgOk); // send ok to server
+            dout.write((msgOk + "\n").getBytes());
             dout.flush();
             // TODO check for return OK, while loop?
             return true; // if returned ok
@@ -94,9 +111,9 @@ public class Client {
     }
 
     private boolean attemptAuth() {
-        String msgAuth = "AUTH"; // TODO implement auth info with port, etc?
+        String msgAuth = "AUTH: "; // TODO implement auth info with port, etc?
         try {
-            dout.writeUTF(msgAuth); // send info to server
+            dout.write((msgAuth + user + "\n").getBytes());
             dout.flush();
             // TODO check for return auth, while loop?
             return true; // if returned ok
