@@ -49,21 +49,33 @@ public class Client {
         }
     }
 
-    void run() throws Exception {
+    void run() {
         while (running) {
-            System.out.println("Starting server... ");
-            int i = 1;
-            int sleep = 600;
-            while (!attemptOk()) {
-                Thread.sleep(sleep); // InterruptedException
-                System.out.println(String.format("Attemping OK (%s) attempt, sleep %sms", i, sleep));
-                i++;
+            printWelcome();
+            // connection attempt
+            // OK attempt
+            System.out.print("Sending HELO... ");
+            try {
+                while (!attemptOk()) {
+                    System.out.println("Cannot connect to server. Trying again...");
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
-            if (attemptAuth()) {
-                System.out.println("Auth successful");
-            } else {
-                System.out.println("Auth unsuccessful");
+            System.out.println("SUCCESS: server OK");
+            // Auth attempt
+            System.out.print("Attempting AUTH as user: " + user + "...");
+            try {
+                while (!attemptAuth()) {
+                    System.out.println("Cannot get authentication. Trying again...");
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
+            System.out.println("SUCCESS: server OK");
+            // Preparation
         }
     }
 
@@ -97,28 +109,24 @@ public class Client {
 
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: connection ~~~~~~~~~~~~~~~
 
-    private boolean attemptOk() {
+    private Boolean attemptOk() throws IOException {
         String msgOk = "HELO";
-        try {
-            dout.write((msgOk + "\n").getBytes());
-            dout.flush();
-            // TODO check for return OK, while loop?
-            return true; // if returned ok
-        } catch (Exception e) {
-            System.out.println(e);
+        dout.write((msgOk + "\n").getBytes());
+        dout.flush();
+        String reply = getMessage();
+        if (reply.equals("OK")) {
+            return true;
         }
         return false;
     }
 
-    private boolean attemptAuth() {
+    private Boolean attemptAuth() throws IOException {
         String msgAuth = "AUTH: "; // TODO implement auth info with port, etc?
-        try {
-            dout.write((msgAuth + user + "\n").getBytes());
-            dout.flush();
-            // TODO check for return auth, while loop?
-            return true; // if returned ok
-        } catch (Exception e) {
-            System.out.println(e);
+        dout.write((msgAuth + user + "\n").getBytes());
+        dout.flush();
+        String reply = getMessage();
+        if (reply.equals("OK")) {
+            return true;
         }
         return false;
     }
@@ -138,8 +146,14 @@ public class Client {
 
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: preparation ~~~~~~~~~~~~~~~
 
-    private boolean attemptPreparation() {
+    private boolean readSystem() {
         return false;
+    }
+
+    private boolean attemptPreparation() throws IOException {
+        dout.write(("REDY\n").getBytes()); // send ready message to server,
+        dout.flush();
+        return true;
     }
 
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: Simulation event ~~~~~~~~~~~~~~~
