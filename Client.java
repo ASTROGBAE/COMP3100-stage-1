@@ -12,14 +12,11 @@ public class Client {
     DataOutputStream dout;
 
     // client messages
-    static String msgOk = "HELO";
-    static String msgAuth = "AUTH"; // TODO implement auth info with port, etc?
-    static String msgQuite = "QUIT";
     static String[] clientCommand = {
             "GETS" // TODO add all from specs
     };
 
-    // server messages
+    // server commands
     // TODO if necessary??
     static String[] serverCommand = {
             "JOBN", "JOBP", "JCPL", "RESF", "RESR", "NONE"
@@ -66,10 +63,25 @@ public class Client {
         }
     }
 
-    // other methods
     // TODO how to establish and keep a connection?
 
+    /**
+     * Command categories
+     * 
+     * Categories:
+     * - Connection
+     * - Preparation
+     * - Simulation Event
+     * - Client Action
+     * - Error
+     * - Acknowledgement
+     * src: distus-MQ section: 8
+     */
+
+    // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: connection ~~~~~~~~~~~~~~~
+
     private boolean attemptOk() {
+        String msgOk = "HELO";
         try {
             dout.writeUTF(msgOk); // send ok to server
             dout.flush();
@@ -82,6 +94,7 @@ public class Client {
     }
 
     private boolean attemptAuth() {
+        String msgAuth = "AUTH"; // TODO implement auth info with port, etc?
         try {
             dout.writeUTF(msgAuth); // send info to server
             dout.flush();
@@ -90,6 +103,49 @@ public class Client {
         } catch (Exception e) {
             System.out.println(e);
         }
+        return false;
+    }
+
+    private boolean attemptQuit() {
+        String msgQuit = "QUIT";
+        try {
+            dout.writeUTF(msgQuit); // send info to server
+            dout.flush();
+            // TODO check for return auth, while loop?
+            return true; // if returned ok
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return false;
+    }
+
+    // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: preparation ~~~~~~~~~~~~~~~
+
+    private boolean attemptPreparation() {
+        return false;
+    }
+
+    // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: Simulation event ~~~~~~~~~~~~~~~
+
+    private boolean recieveJob() {
+        return false;
+    }
+
+    // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: Client action ~~~~~~~~~~~~~~~
+
+    private boolean attemptJobAction() {
+        return false;
+    }
+
+    // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: Error ~~~~~~~~~~~~~~~
+
+    private boolean recieveError() {
+        return false; // TODO add this functionality into a revieve message?
+    }
+
+    // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: preparation ~~~~~~~~~~~~~~~
+
+    private boolean ok() {
         return false;
     }
 }
