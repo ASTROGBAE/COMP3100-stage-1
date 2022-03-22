@@ -15,8 +15,7 @@ class Main {
 
     // main method
     public static void main(String[] args) {
-        s.readServers();
-        s.readJobs();
+        s.readConfig();
         System.out.println("Schedule servers: " + s.servers.toString());
         System.out.println("Schedule jobs: " + s.jobQueue.toString());
     }
