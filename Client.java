@@ -1,26 +1,11 @@
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 
 public class Client {
 
     // client fields
     boolean running;
     String user;
-    ArrayList<Server> servers;
-    ArrayList<Job> jobs;
 
     // socket fields
     Socket socket;
@@ -120,48 +105,6 @@ public class Client {
 
     private String getMessage() throws IOException {
         return din.readLine();
-    }
-
-    // TODO test this in its own file?
-    // done using xml SAXParser
-    private boolean readConfig() {
-        String FILENAME = "/users/mkyong/staff.xml";
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(); // init factory
-
-        try {
-            DocumentBuilder db = dbf.newDocumentBuilder(); // parse xml file
-            Document doc = db.parse(new File(FILENAME)); // // create new doc
-
-            // get <server>
-            NodeList serverNodes = doc.getElementsByTagName("server");// get server objects
-
-            for (int i = 0; i < serverNodes.getLength(); i++) {
-                Node _server = serverNodes.item(i);
-
-                if (_server.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) _server;
-
-                    // TODO refactor code below it is UGLY AF
-
-                    // get server attributes
-                    String type = element.getAttribute("type");
-                    int limit = Integer.parseInt(element.getAttribute("limit"));
-                    int bootUpTime = Integer.parseInt(element.getAttribute("bootUpTime"));
-                    float hourlyRate = Integer.parseInt(element.getAttribute("hourlyRate"));
-                    int cores = Integer.parseInt(element.getAttribute("cores"));
-                    int memory = Integer.parseInt(element.getAttribute("memory"));
-                    int disk = Integer.parseInt(element.getAttribute("disk"));
-
-                    // initialise server object, add new list
-                    servers.add(new Server(type, limit, bootUpTime, hourlyRate, cores, memory, disk));
-                }
-            }
-
-        } catch (ParserConfigurationException | SAXException | IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-
     }
 
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: connection ~~~~~~~~~~~~~~~

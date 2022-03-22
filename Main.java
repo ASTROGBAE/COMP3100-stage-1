@@ -6,13 +6,18 @@ class Main {
 
     // TODO implement general process
 
-    static String address = "localhost";
-    static int port = 6666;
+    // static String address = "localhost";
+    // static int port = 6666;
 
-    static Client client = new Client(address, port);
+    // static Client client = new Client(address, port);
+
+    static Scheduler s = new Scheduler();
 
     // main method
     public static void main(String[] args) {
-        client.run();
+        s.readServers();
+        s.readJobs();
+        System.out.println("Schedule servers: " + s.servers.toString());
+        System.out.println("Schedule jobs: " + s.jobQueue.toString());
     }
 }
