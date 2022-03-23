@@ -9,11 +9,12 @@ import java.io.File;
 import java.io.IOException;
 
 public class Scheduler {
-    static final String configPath = "./config_samples/ds-sample-config01.xml";
+    String configPath;
     ArrayList<Server> servers;
     Queue<Job> jobQueue;
 
-    public Scheduler() {
+    public Scheduler(String _configPath) {
+        configPath = _configPath;
         servers = new ArrayList<Server>();
         jobQueue = new LinkedList<Job>();
     }
@@ -75,5 +76,18 @@ public class Scheduler {
         int maxRunTime = Integer.parseInt(element.getAttribute("maxRunTime"));
         int minRunTime = Integer.parseInt(element.getAttribute("minRunTime"));
         return new Job(type, populationRate, maxRunTime, minRunTime);
+    }
+
+    // TODO different params than job file??? Not sure what to do here
+    private Job dataToJob(int data) {
+        String dataStr = Integer.toString(data);
+        if (dataStr.length() == 12) {
+            int time = Integer.parseInt(dataStr.substring(0, 3));
+            int runtime = Integer.parseInt(dataStr.substring(4, 7));
+            int cpu = Integer.parseInt(dataStr.substring(7, 8));
+            int ram = Integer.parseInt(dataStr.substring(8, 10));
+            int disk = Integer.parseInt(dataStr.substring(10, 13));
+        }
+        return null;
     }
 }
