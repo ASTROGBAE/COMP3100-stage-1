@@ -143,17 +143,17 @@ public class Client {
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: Client action ~~~~~~~~~~~~~~~
 
     private boolean getJobs() throws IOException {
-        sendMessage("GETS All");
-        int jobNum = Integer.parseInt(din.readLine().substring(0, 1)); // get job numbers from message, currently
+        sendMessage("REDY");
+        int jobNum = Integer.parseInt(din.readLine().substring(0, 2)); // get job numbers from message, currently
                                                                        // hardcoded to 1 digit, fix?
         // have regex for first whitespace?
         sendMessage("OK"); // send OK for jobs
         for (int i = 0; i < jobNum; i++) {
             String line = din.readLine(); // server, need to read every line from data
-            int num = Integer.parseInt(line.substring(0, 2)); // just a guess for the number
+            int jobID = Integer.parseInt(line.substring(8, 9)); // just a guess for the number
             // hardcoded number...
             String type = line.substring(2, 10);
-            Job j = new Job(num, type);
+            Job j = new Job(jobID, type);
             // add to jobs...
             // TODO refactor into scheduler
         }
@@ -161,8 +161,15 @@ public class Client {
         return true;
     }
 
+    private boolean getServers() throws IOException {
+        sendMessage("GETS All");
+        // for servers, get thingo
+        return false;
+    }
+
     private boolean scheduleJob() {
         Job j = null; // get job from jons
+
         return false;
     }
 
