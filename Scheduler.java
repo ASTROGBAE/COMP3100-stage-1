@@ -67,6 +67,7 @@ public class Scheduler {
         return new Server(type, limit, bootupTime, hourlyRate, cores, memory, disk);
     }
 
+    // TODO remove this?
     private Job elementToJob(Element element) {
         // TODO refactor code below it is UGLY AF
 
@@ -75,7 +76,8 @@ public class Scheduler {
         int populationRate = Integer.parseInt(element.getAttribute("populationRate"));
         int maxRunTime = Integer.parseInt(element.getAttribute("maxRunTime"));
         int minRunTime = Integer.parseInt(element.getAttribute("minRunTime"));
-        return new Job(type, populationRate, maxRunTime, minRunTime);
+        // return new Job(type, populationRate, maxRunTime, minRunTime);
+        return null;
     }
 
     // TODO different params than job file??? Not sure what to do here

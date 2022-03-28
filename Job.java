@@ -1,12 +1,10 @@
 public class Job {
 
     String type;
-    int minRunTime, maxRunTime, populationRate;
+    int number;
 
-    public Job(String _type, int _minRunTime, int _maxRunTime, int _populationRate) {
+    public Job(int _number, String _type) {
         type = _type;
-        minRunTime = _minRunTime;
-        maxRunTime = _maxRunTime;
-        populationRate = _populationRate;
+        number = _number;
     }
 }

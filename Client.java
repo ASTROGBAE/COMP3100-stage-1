@@ -75,25 +75,19 @@ public class Client {
     // Commands: HELO, AUTH, QUIT
 
     private Boolean attemptHelo() throws IOException {
-        String msgHelo = "HELO";
-        dout.write((msgHelo + "\n").getBytes());
-        dout.flush();
+        sendMessage("HELO");
         return matchResponse("OK");
     }
 
     private Boolean attemptAuth() throws IOException {
-        String msgAuth = "AUTH: "; // TODO implement auth info with port, etc?
-        dout.write((msgAuth + user + "\n").getBytes());
-        dout.flush();
+        sendMessage("AUTH: " + user);
         return matchResponse("OK");
     }
 
     private boolean attemptQuitAndClose() throws IOException {
-        String msgQuit = "QUIT";
-        dout.writeUTF(msgQuit); // send info to server
-        dout.flush();
+        sendMessage("QUIT");
         // TODO check for return auth, while loop?
-        if (matchResponse(msgQuit)) { // check server returns quit
+        if (matchResponse("QUIT")) { // check server returns quit
             socket.close(); // connection ended! Close everything
             din.close();
             dout.close();
@@ -112,8 +106,7 @@ public class Client {
      * @throws IOException
      */
     private boolean attemptPreparation() throws IOException {
-        dout.write(("REDY\n").getBytes()); // send ready message to server,
-        dout.flush();
+        sendMessage("REDY"); // send message to server
         return matchResponse("DATA");
     }
 
@@ -149,7 +142,27 @@ public class Client {
 
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: Client action ~~~~~~~~~~~~~~~
 
-    private boolean attemptJobAction() {
+    private boolean getJobs() throws IOException {
+        sendMessage("GETS All");
+        int jobNum = Integer.parseInt(din.readLine().substring(0, 1)); // get job numbers from message, currently
+                                                                       // hardcoded to 1 digit, fix?
+        // have regex for first whitespace?
+        sendMessage("OK"); // send OK for jobs
+        for (int i = 0; i < jobNum; i++) {
+            String line = din.readLine(); // server, need to read every line from data
+            int num = Integer.parseInt(line.substring(0, 2)); // just a guess for the number
+            // hardcoded number...
+            String type = line.substring(2, 10);
+            Job j = new Job(num, type);
+            // add to jobs...
+            // TODO refactor into scheduler
+        }
+        sendMessage("OK"); // send OK for jobs
+        return true;
+    }
+
+    private boolean scheduleJob() {
+        Job j = null; // get job from jons
         return false;
     }
 
@@ -174,6 +187,11 @@ public class Client {
                 String.format("Target IP: %s Target Port: %s", socket.getInetAddress(), socket.getPort()));
         System.out.println(
                 String.format("Local IP: %s Local Port: %s", socket.getLocalAddress(), socket.getLocalPort()));
+    }
+
+    private void sendMessage(String msg) throws IOException {
+        dout.write((msg + "\n").getBytes()); // send OK for jobs
+        dout.flush();
     }
 
     private String getMessage() throws IOException {
