@@ -13,6 +13,7 @@ public class Communication {
     DataOutputStream dout;
 
     // data structyures
+    Schedule schd;
     ArrayList<Server> servers;
     Queue<Job> jobQueue;
 
@@ -79,9 +80,8 @@ public class Communication {
         return false; // invalid or no responce...
     }
 
-    public boolean attemptGetServers() throws IOException {
-        String data = getMessage();
-        int serverN; // TODO very hardcoded! Use regex to find numbers!!!
+    public boolean attemptGetServers() throws Exception {
+        int serverN; // number of servers to add - calculated below
         Pattern p = Pattern.compile("(DATA) (\\d+) "); // regex to capture DATA and number of servers
         Matcher m = p.matcher(getMessage()); // get message and add it to matcher
         if (m != null && m.group(1).equals("DATA")) { // check if message is valid
@@ -101,13 +101,30 @@ public class Communication {
             String type = m.group(1);
             servers.add(new Server(number, type));
         }
+        // attempt to make or update server schedule
+        if (schd == null) { // create new schedule with new index at schedule size-1
+            schd = new Schedule(serverN);
+        } else { // update schedule size, do not change index
+            schd.setServerNumbers(serverN);
+        }
+        sendMessage("OK"); // send OK to server, servers recieved!
         return true;
     }
 
-    public boolean scheduleJob() {
-        Job j = null; // get job from jons
-
-        return false;
+    public boolean scheduleJob() throws IOException {
+        if (jobQueue != null && !jobQueue.isEmpty()) { // check if jobs are empty
+            Job _job = jobQueue.poll();
+            if (_job != null && (servers != null && !servers.isEmpty())) { // check there is a job and servers are not
+                                                                           // empty
+                Server _server = servers.get(schd.getindex());
+                sendMessage(String.format("SCHD %s %s %s", _job.number, _server.type, _server.number)); // send
+                                                                                                        // scheduling
+                // instrument to server
+                // TODO how to signal from reply that is was correct sent?
+                return true;
+            }
+        }
+        return false; // no job to be polled
     }
 
     // ~~~~~~~~~~~~~~~ COMMAND CATEGORY: Error ~~~~~~~~~~~~~~~
