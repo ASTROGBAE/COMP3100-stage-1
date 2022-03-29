@@ -111,7 +111,7 @@ public class Communication {
         return true;
     }
 
-    public boolean scheduleJob() throws IOException {
+    public boolean attemptScheduleJob() throws IOException {
         if (jobQueue != null && !jobQueue.isEmpty()) { // check if jobs are empty
             Job _job = jobQueue.poll();
             if (_job != null && (servers != null && !servers.isEmpty())) { // check there is a job and servers are not
@@ -150,16 +150,16 @@ public class Communication {
                 String.format("Local IP: %s Local Port: %s", socket.getLocalAddress(), socket.getLocalPort()));
     }
 
-    public void sendMessage(String msg) throws IOException {
+    private void sendMessage(String msg) throws IOException {
         dout.write((msg + "\n").getBytes()); // send OK for jobs
         dout.flush();
     }
 
-    public String getMessage() throws IOException {
+    private String getMessage() throws IOException {
         return din.readLine();
     }
 
-    public Boolean matchResponse(String expectedMsg) throws IOException {
+    private Boolean matchResponse(String expectedMsg) throws IOException {
         if (getMessage().equals(expectedMsg)) {
             return true;
         }
