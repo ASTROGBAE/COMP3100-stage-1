@@ -3,8 +3,7 @@ public class Job {
     String type;
     int number;
 
-    public Job(int _number, String _type) {
-        type = _type;
+    public Job(int _number) {
         number = _number;
     }
 }
