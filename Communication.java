@@ -67,7 +67,7 @@ public class Communication {
      * @return true if jobs found and added to queue
      * @throws IOException
      */
-    public boolean attemptGetJobs() throws IOException {
+    public int attemptGetJob() throws IOException {
         sendMessage("REDY"); // send message to server
         String data = getMessage(); // TODO check if there are other ways to get jobs other than using JOBN!
         if (data.matches("^JOBN")) { // check if valid data (beginning must be "JOBN")
@@ -75,9 +75,11 @@ public class Communication {
             Matcher m = p.matcher(getMessage()); // get message and add it to matcher
             int jobID = Integer.parseInt(m.group(1)); // get jobID
             jobQueue.add(new Job(jobID)); // add new job to server!
-            return true;
+            return 1;
+        } else if (data.equals("NONE")) {
+            return 0; // no more jobs!
         }
-        return false; // invalid or no responce...
+        return -1; // invalid or no responce...
     }
 
     public boolean attemptGetServers() throws Exception {

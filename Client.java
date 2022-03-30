@@ -70,31 +70,43 @@ public class Client {
                 e.printStackTrace();
             }
             // job and schedule loop
+            boolean noJobs = false; // true if attemptGetJob == 0
             int attempt = 1; // attempt log to be incremented each loop
             try {
                 do {
                     // get job
                     try {
-                        if (!comms.attemptGetJobs()) {
-                            System.out.println(String.format("[%s] Could not find a job", attempt));
+                        switch (comms.attemptGetJob()) { // attempt get job
+                            case 1: // success
+                                System.out.println(String.format("[%s] Job recieved.", attempt));
+                                break;
+                            case 0: // no more jobs
+                                System.out.println(String
+                                        .format("[%s] Server has no more jobs, ending scheduling loop...", attempt));
+                                noJobs = true; // change loop boolean
+                                break;
+                            case -1: // failure
+                                System.out
+                                        .println(String.format("[%s] Job recieve was invalid, trying again.", attempt));
+                                break;
                         }
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
-                        System.out.println("IOException in attempting to get next job, printing stack trace...");
+                        System.out.println("IOException in attempting to get job, printing stack trace...");
                         e.printStackTrace();
                     }
                     // schedule job
                     if (!comms.attemptScheduleJob()) {
-                        System.out.println(String.format("[%s] Could not find a job", attempt));
+                        System.out.println(String.format("[%s] Could not successfully schedule a job", attempt));
                     }
                     attempt++; // increment attempt log
-                } while (comms.attemptGetJobs()); // TODO make condition better, is there a way to check and see if
-                                                  // there are still jobs remaining in the simulation?
+                } while (!noJobs); // loop while still jobs remaining (i.e. server has no responded 'NONE' to
+                                   // 'REDY')
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            // when no jobs exist, attempt to close
+            // when no job scheduling done, attempt to close
             System.out.println("Client attempting to quit and close socket...");
             try {
                 while (!comms.attemptQuitAndClose()) {
