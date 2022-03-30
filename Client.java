@@ -54,23 +54,9 @@ public class Client {
                 e.printStackTrace();
             }
             System.out.println("SUCCESS: server OK with AUTH");
-            // get servers
-            try {
-                while (!comms.attemptGetServers()) {
-                    System.out.println("Cannot get server list. Trying again...");
-                }
-                System.out.println("SUCCESS: server list recieved");
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                System.out.println("IOException in attempting to get servers, printing stack trace...");
-                e.printStackTrace();
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                System.out.println("Exception in attempting to intialise job scheduler, printing stack trace...");
-                e.printStackTrace();
-            }
-            // job and schedule loop
+            // job, server and schedule loop
             boolean noJobs = false; // true if attemptGetJob == 0
+            boolean firstJob = true; // if just started talking, will need to read in servers the first time...
             int attempt = 1; // attempt log to be incremented each loop
             try {
                 do {
@@ -95,11 +81,31 @@ public class Client {
                         System.out.println("IOException in attempting to get job, printing stack trace...");
                         e.printStackTrace();
                     }
+                    // get servers, if first time through loop (only first job!)
+                    if (firstJob) {
+                        try {
+                            while (!comms.attemptGetServers()) {
+                                System.out.println("Cannot get server list. Trying again...");
+                            }
+                            System.out.println("SUCCESS: server list recieved");
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            System.out.println("IOException in attempting to get servers, printing stack trace...");
+                            e.printStackTrace();
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                            System.out.println("Exception in attempting to intialise job scheduler, printing stack trace...");
+                            e.printStackTrace();
+                        }
+                    }
                     // schedule job
                     if (!comms.attemptScheduleJob()) {
                         System.out.println(String.format("[%s] Could not successfully schedule a job", attempt));
                     }
                     attempt++; // increment attempt log
+                    if (attempt > 100) {// TODO remove, used for debugging to make sure no infinite looop
+                        noJobs = true;
+                    }
                 } while (!noJobs); // loop while still jobs remaining (i.e. server has no responded 'NONE' to
                                    // 'REDY')
             } catch (IOException e) {

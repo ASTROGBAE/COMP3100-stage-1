@@ -7,7 +7,7 @@ class Main {
     // TODO implement general process
 
     static String address = "localhost";
-    static int port = 6666;
+    static int port = 50000;
 
     static Client client = new Client(address, port);
 

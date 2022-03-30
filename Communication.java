@@ -83,9 +83,11 @@ public class Communication {
     }
 
     public boolean attemptGetServers() throws Exception {
+        sendMessage("GETS All"); // send message to server
         int serverN; // number of servers to add - calculated below
         Pattern p = Pattern.compile("(DATA) (\\d+) "); // regex to capture DATA and number of servers
-        Matcher m = p.matcher(getMessage()); // get message and add it to matcher
+        String msg = getMessage();
+        Matcher m = p.matcher(msg); // get message and add it to matcher
         if (m != null && m.group(1).equals("DATA")) { // check if message is valid
             // for a job and long enough to
             // get job numbers
@@ -110,6 +112,7 @@ public class Communication {
             schd.setServerNumbers(serverN);
         }
         sendMessage("OK"); // send OK to server, servers recieved!
+        getMessage(); // recieve message, will be "."
         return true;
     }
 
@@ -155,10 +158,13 @@ public class Communication {
     private void sendMessage(String msg) throws IOException {
         dout.write((msg + "\n").getBytes()); // send OK for jobs
         dout.flush();
+        System.out.println("Sent msg: " + msg);
     }
 
     private String getMessage() throws IOException {
-        return din.readLine();
+        String msg = din.readLine();
+        System.out.println("Recieved msg: " + msg);
+        return msg ;
     }
 
     private Boolean matchResponse(String expectedMsg) throws IOException {
