@@ -95,7 +95,17 @@ public class Client {
                 e.printStackTrace();
             }
             // when no jobs exist, attempt to close
-
+            System.out.println("Client attempting to quit and close socket...");
+            try {
+                while (!comms.attemptQuitAndClose()) {
+                    System.out.println("Quite failed, attempting again...");
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            System.out.println("Quit successful. Exitting app...");
+            running = false;
         }
     }
 }

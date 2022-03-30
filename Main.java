@@ -6,12 +6,14 @@ class Main {
 
     // TODO implement general process
 
-    // static String address = "localhost";
-    // static int port = 6666;
+    static String address = "localhost";
+    static int port = 6666;
 
-    // static Client client = new Client(address, port);
+    static Client client = new Client(address, port);
 
     // main method
     public static void main(String[] args) {
+        client.run();
+        System.out.println("Done.");
     }
 }
