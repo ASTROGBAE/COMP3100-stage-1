@@ -70,10 +70,9 @@ public class Communication {
     public int attemptGetJob() throws IOException {
         sendMessage("REDY"); // send message to server
         String data = getMessage(); // TODO check if there are other ways to get jobs other than using JOBN!
-        if (data.matches("^JOBN")) { // check if valid data (beginning must be "JOBN")
-            Pattern p = Pattern.compile("^JOBN \\d+ (\\d+) "); // regex to capture jobID (second number entry)
-            Matcher m = p.matcher(getMessage()); // get message and add it to matcher
-            int jobID = Integer.parseInt(m.group(1)); // get jobID
+        String dat = data.substring(0, 5);
+        if (data.substring(0, 4).equals("JOBN")) { // check if valid data (beginning must be "JOBN")
+            int jobID = Integer.parseInt(data.substring(8, 9)); // get jobID
             jobQueue.add(new Job(jobID)); // add new job to server!
             return 1;
         } else if (data.equals("NONE")) {
@@ -85,24 +84,34 @@ public class Communication {
     public boolean attemptGetServers() throws Exception {
         sendMessage("GETS All"); // send message to server
         int serverN; // number of servers to add - calculated below
-        Pattern p = Pattern.compile("(DATA) (\\d+) "); // regex to capture DATA and number of servers
         String msg = getMessage();
-        Matcher m = p.matcher(msg); // get message and add it to matcher
-        if (m != null && m.group(1).equals("DATA")) { // check if message is valid
+        if (msg != null && msg.substring(0, 4).equals("DATA")) { // check if message is valid (start with data)
             // for a job and long enough to
             // get job numbers
-            serverN = Integer.parseInt(m.group(2));
+            serverN = Integer.parseInt(msg.substring(5, 6)); // get number (TODO hardcoded to 1 digit)
             if (serverN <= 0) { // no servers to add or invalid number...
+                System.out.println("no server to add or invalid num");
                 return false;
             }
         } else { // above if statement false
+            System.out.println("DATA matcher invalid");
             return false;
         }
-        p = Pattern.compile("^(\\w{4}) (\\d+) "); // regex to capture server type and number
+        // get jobs!
+        sendMessage("OK"); // send message to server
         for (int i = 0; i < serverN; i++) { // iterate through number of jobs
-            m = p.matcher(getMessage()); // get message and add it to matcher
-            int number = Integer.parseInt(m.group(2)); // server number
-            String type = m.group(1);
+            msg = getMessage();
+            int number = 0; String type = "";
+            if (msg.matches("^super-silk(.*)")) {
+                // TODO read in all types of servers, iterate through and pattern match that way...
+                String n = msg.substring(11, 12);
+                number = Integer.parseInt(n); // server number // TODO super hardcoded
+                type = msg.substring(0, 10); // TODO super hardcoded
+            } else {
+            String n = msg.substring(5, 6);
+            number = Integer.parseInt(n); // server number // TODO super hardcoded
+            type = msg.substring(0, 4); // TODO super hardcoded
+            }
             servers.add(new Server(number, type));
         }
         // attempt to make or update server schedule
@@ -113,6 +122,7 @@ public class Communication {
         }
         sendMessage("OK"); // send OK to server, servers recieved!
         getMessage(); // recieve message, will be "."
+        System.out.println("servers recieved and logged");
         return true;
     }
 
@@ -126,6 +136,7 @@ public class Communication {
                                                                                                         // scheduling
                 // instrument to server
                 // TODO how to signal from reply that is was correct sent?
+                getMessage(); // get responce
                 return true;
             }
         }

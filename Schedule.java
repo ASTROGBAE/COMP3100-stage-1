@@ -5,7 +5,7 @@ public class Schedule {
     public Schedule(int _serverNumber) throws Exception {
         if (_serverNumber >= 0) {
             serverNumber = _serverNumber;
-            index = _serverNumber;
+            index = _serverNumber-1;
         } else {
             throw new Exception("Exception: invalid Schedule server number (<=0)");
         }

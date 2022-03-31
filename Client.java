@@ -83,6 +83,7 @@ public class Client {
                     }
                     // get servers, if first time through loop (only first job!)
                     if (firstJob) {
+                        System.out.println("Attempting to get server list...");
                         try {
                             while (!comms.attemptGetServers()) {
                                 System.out.println("Cannot get server list. Trying again...");
