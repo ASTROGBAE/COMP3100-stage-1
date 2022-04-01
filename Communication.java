@@ -69,6 +69,23 @@ public class Communication {
      */
     public int attemptGetJob() throws IOException {
         sendMessage("REDY"); // send message to server
+
+        String jobsRegex = "^(\\w{4}) (\\d+) (\\d+) .*";
+
+        String msg = getMessage();
+        if (msg != null && msg.matches(jobsRegex)) { // check message is valid for server
+            String type = "";
+            int number = 0;
+            // regex process
+            Pattern pattern = Pattern.compile(jobsRegex);
+            Matcher matcher = pattern.matcher(msg);
+            if (matcher.find()) { // group matches
+                type = matcher.group(1);
+                number = Integer.parseInt(matcher.group(2));
+            }
+            servers.add(new Server(number, type)); // add server
+        }
+
         String data = getMessage(); // TODO check if there are other ways to get jobs other than using JOBN!
         String dat = data.substring(0, 5);
         if (data.substring(0, 4).equals("JOBN")) { // check if valid data (beginning must be "JOBN")
@@ -83,36 +100,37 @@ public class Communication {
 
     public boolean attemptGetServers() throws Exception {
         sendMessage("GETS All"); // send message to server
-        int serverN; // number of servers to add - calculated below
-        String msg = getMessage();
-        if (msg != null && msg.substring(0, 4).equals("DATA")) { // check if message is valid (start with data)
-            // for a job and long enough to
-            // get job numbers
-            serverN = Integer.parseInt(msg.substring(5, 6)); // get number (TODO hardcoded to 1 digit)
-            if (serverN <= 0) { // no servers to add or invalid number...
-                System.out.println("no server to add or invalid num");
-                return false;
-            }
-        } else { // above if statement false
-            System.out.println("DATA matcher invalid");
+        // server
+        String dataRegex = "^DATA (\\d+) .*";
+        String msg = getMessage(); // get message, need to see if DATA...
+        if (msg == null || !msg.matches(dataRegex)) { // responce doesnt match, end
             return false;
         }
-        // get jobs!
-        sendMessage("OK"); // send message to server
+        // regex process
+        Pattern pattern = Pattern.compile(dataRegex);
+        Matcher matcher = pattern.matcher(msg);
+        int serverN = 0;
+        if (matcher.find()) { // group matches
+            serverN = Integer.parseInt(matcher.group(1)); // number of servers to add, parsed from regex
+        }
+        // DATA succeeded!
+        sendMessage("OK"); // send confirmation to server, recieve jobs
+        // recieve jobs per line
+        String serverRegex = "^(\\w+) (\\d+) .*";
         for (int i = 0; i < serverN; i++) { // iterate through number of jobs
             msg = getMessage();
-            int number = 0; String type = "";
-            if (msg.matches("^super-silk(.*)")) {
-                // TODO read in all types of servers, iterate through and pattern match that way...
-                String n = msg.substring(11, 12);
-                number = Integer.parseInt(n); // server number // TODO super hardcoded
-                type = msg.substring(0, 10); // TODO super hardcoded
-            } else {
-            String n = msg.substring(5, 6);
-            number = Integer.parseInt(n); // server number // TODO super hardcoded
-            type = msg.substring(0, 4); // TODO super hardcoded
+            if (msg != null && msg.matches(serverRegex)) { // check message is valid for server
+                String type = "";
+                int number = 0;
+                // regex process
+                pattern = Pattern.compile(serverRegex);
+                matcher = pattern.matcher(msg);
+                if (matcher.find()) { // group matches
+                    type = matcher.group(1);
+                    number = Integer.parseInt(matcher.group(2));
+                }
+                servers.add(new Server(number, type)); // add server
             }
-            servers.add(new Server(number, type));
         }
         // attempt to make or update server schedule
         if (schd == null) { // create new schedule with new index at schedule size-1
@@ -175,7 +193,7 @@ public class Communication {
     private String getMessage() throws IOException {
         String msg = din.readLine();
         System.out.println("Recieved msg: " + msg);
-        return msg ;
+        return msg;
     }
 
     private Boolean matchResponse(String expectedMsg) throws IOException {

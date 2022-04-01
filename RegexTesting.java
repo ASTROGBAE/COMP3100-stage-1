@@ -20,10 +20,10 @@ public class RegexTesting {
             "super-silk 0 inactive -1 16 64000 512000 0 0"
     };
 
-    static String dataRegex = "^DATA (\\d+) "; // return grouping from outer to inner: DATA 5, then 5
+    static String dataRegex = "^DATA (\\d+) .*"; // return grouping from outer to inner: DATA 5, then 5
     // do matcher.group 0, 1, etc.
     // TADA! got it working!!
-    static String jobsRegex = "^(\\w{4}) (\\d+) (\\d+) ";
+    static String jobsRegex = "^(\\w{4}) (\\d+) (\\d+) .*";
     // this regex may work with data, jobs and server!
     // --DATA:
     // 0: DATA 5
@@ -31,17 +31,18 @@ public class RegexTesting {
     // 2: 5
     // --JOBS
     // 0:
-    static String serverRegex = "^(\\w{4}) (\\d+) ";
+    static String serverRegex = "^(\\w+) (\\d+) .*";
 
-    static Pattern pattern = Pattern.compile(dataRegex);
-    static Matcher matcher = pattern.matcher(data[0]);
+    static Pattern pattern = Pattern.compile(serverRegex);
+    static Matcher matcher = pattern.matcher(servers[0]);
 
     public static void main(String[] args) {
         if (matcher.find()) {
+            System.out.println(data[0].matches(dataRegex));
             System.out.println(matcher.group(0));
             System.out.println(matcher.group(1));
             System.out.println(matcher.group(2));
-            System.out.println(matcher.group(2));
+            System.out.println(matcher.group(3));
         }
     }
 }
