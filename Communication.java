@@ -69,39 +69,30 @@ public class Communication {
     /**
      * Method handling Preparation phase (REDY <-> DATA)
      * 
-     * @return true if jobs found and added to queue
+     * @return 1 is job added, 0 if no more jobs, -1 invalid
      * @throws IOException
      */
 
     public int attemptGetJob() throws IOException {
         sendMessage("REDY"); // send message to server
-
         String jobsRegex = "^(\\w{4}) (\\d+) (\\d+) .*";
-
         String msg = getMessage();
-        if (msg != null && msg.matches(jobsRegex)) { // check message is valid for server
-            String type = "";
-            int number = 0;
+        if (msg.equals("NONE")) { // check if message is NONE, means no more jobs
+            return 0;
+        }
+        if (msg != null) {
             // regex process
             Pattern pattern = Pattern.compile(jobsRegex);
             Matcher matcher = pattern.matcher(msg);
-            if (matcher.find()) { // group matches
-                type = matcher.group(1);
-                number = Integer.parseInt(matcher.group(2));
+            if (matcher.group(1).equals("JOBN")) { // check message is valid for server
+                if (matcher.find()) { // group matches
+                    int jobID = Integer.parseInt(matcher.group(3));
+                    jobQueue.add(new Job(jobID)); // add new job to jobs!
+                    return 1;
+                }
             }
-            servers.add(new Server(number, type)); // add server
         }
-
-        String data = getMessage(); // TODO check if there are other ways to get jobs other than using JOBN!
-        String dat = data.substring(0, 5);
-        if (data.substring(0, 4).equals("JOBN")) { // check if valid data (beginning must be "JOBN")
-            int jobID = Integer.parseInt(data.substring(8, 9)); // get jobID
-            jobQueue.add(new Job(jobID)); // add new job to server!
-            return 1;
-        } else if (data.equals("NONE")) {
-            return 0; // no more jobs!
-        }
-        return -1; // invalid or no responce...
+        return -1; // did not work!
     }
 
     private Server getNextServer() throws Exception {
@@ -171,10 +162,10 @@ public class Communication {
 
     public boolean attemptScheduleJob() throws Exception {
         if (jobQueue != null && !jobQueue.isEmpty()) { // check if jobs are empty
-            Job _job = jobQueue.poll();
-            if (_job != null && (servers != null && !servers.isEmpty())) { // check there is a job and servers are not
-                                                                           // empty
-                Server _server = getNextServer();
+            Job _job = jobQueue.poll(); // pop job off queue
+            if (_job != null) { // check there is a job and servers are not
+                                // empty
+                Server _server = getNextServer(); // get server as per what the algorithm in that method states
                 sendMessage(String.format("SCHD %s %s %s", _job.number, _server.type, _server.number)); // send
                                                                                                         // scheduling
                 // instrument to server
