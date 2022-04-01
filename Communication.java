@@ -4,6 +4,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 public class Communication {
 
     // socket fields
@@ -22,8 +26,9 @@ public class Communication {
     public Communication(Socket _socket) {
         socket = _socket;
         user = System.getProperty("user.name"); // get system name
-        servers = new ArrayList<Server>();
+        schd = new Schedule();
         jobQueue = new LinkedList<Job>();
+        servers = new ArrayList<Server>();
         try {
             din = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             dout = new DataOutputStream(socket.getOutputStream());
@@ -67,6 +72,7 @@ public class Communication {
      * @return true if jobs found and added to queue
      * @throws IOException
      */
+
     public int attemptGetJob() throws IOException {
         sendMessage("REDY"); // send message to server
 
@@ -98,58 +104,77 @@ public class Communication {
         return -1; // invalid or no responce...
     }
 
-    public boolean attemptGetServers() throws Exception {
-        sendMessage("GETS All"); // send message to server
+    private Server getNextServer() throws Exception {
+        // check server list
+        if (servers != null) {
+            if (servers.size() == 0) { // if servers have run out, go to next type
+                wipeServers(); // clean servers
+                sendMessage("GETS " + schd.getNextType()); // send message to server to get a server type, increment
+                                                           // schedule
+                int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
+                sendMessage("OK"); // send confirmation to server, recieved DATA
+                for (int i = 0; i < dataNum; i++) {
+                    loadServer(getMessage()); // load server
+                }
+                sendMessage("OK"); // send confirmation to server, recieved servers
+                getMessage();
+                System.out.println("servers recieved and logged");
+            }
+            return servers.remove(0); // pop initial value
+        }
+        return null;
+    }
+
+    private Integer getDataAmount(String data) {
         // server
         String dataRegex = "^DATA (\\d+) .*";
-        String msg = getMessage(); // get message, need to see if DATA...
-        if (msg == null || !msg.matches(dataRegex)) { // responce doesnt match, end
-            return false;
+        if (data == null || !data.matches(dataRegex)) { // responce doesnt match, end
+            return null;
         }
         // regex process
         Pattern pattern = Pattern.compile(dataRegex);
-        Matcher matcher = pattern.matcher(msg);
-        int serverN = 0;
+        Matcher matcher = pattern.matcher(data);
         if (matcher.find()) { // group matches
-            serverN = Integer.parseInt(matcher.group(1)); // number of servers to add, parsed from regex
+            return Integer.parseInt(matcher.group(1)); // number of servers to add, parsed from regex SUCCESS!
+        } else {
+            return null;
         }
-        // DATA succeeded!
-        sendMessage("OK"); // send confirmation to server, recieve jobs
-        // recieve jobs per line
-        String serverRegex = "^(\\w+) (\\d+) .*";
-        for (int i = 0; i < serverN; i++) { // iterate through number of jobs
-            msg = getMessage();
-            if (msg != null && msg.matches(serverRegex)) { // check message is valid for server
-                String type = "";
-                int number = 0;
-                // regex process
-                pattern = Pattern.compile(serverRegex);
-                matcher = pattern.matcher(msg);
-                if (matcher.find()) { // group matches
-                    type = matcher.group(1);
-                    number = Integer.parseInt(matcher.group(2));
-                }
-                servers.add(new Server(number, type)); // add server
-            }
-        }
-        // attempt to make or update server schedule
-        if (schd == null) { // create new schedule with new index at schedule size-1
-            schd = new Schedule(serverN);
-        } else { // update schedule size, do not change index
-            schd.setServerNumbers(serverN);
-        }
-        sendMessage("OK"); // send OK to server, servers recieved!
-        getMessage(); // recieve message, will be "."
-        System.out.println("servers recieved and logged");
+    }
+
+    private boolean wipeServers() {
+        servers = new ArrayList<Server>(); // reset server list
         return true;
     }
 
-    public boolean attemptScheduleJob() throws IOException {
+    private boolean loadServer(String serverMsg) {
+        String serverRegex = "^(\\w+) (\\d+) .*";
+        if (serverMsg != null && serverMsg.matches(serverRegex)) { // check message is valid for server
+            String type = "";
+            int number = 0;
+            // regex process
+            Pattern pattern = Pattern.compile(serverRegex);
+            Matcher matcher = pattern.matcher(serverMsg);
+            if (matcher.find()) { // group matches
+                type = matcher.group(1);
+                number = Integer.parseInt(matcher.group(2));
+            }
+            servers.add(new Server(number, type)); // add server
+            System.out.println("Server loaded successfully.");
+            return true; // success!
+        }
+        return false; // failure
+    }
+
+    public boolean attemptReadXml() throws ParserConfigurationException, SAXException, IOException {
+        return schd.readTypes();
+    }
+
+    public boolean attemptScheduleJob() throws Exception {
         if (jobQueue != null && !jobQueue.isEmpty()) { // check if jobs are empty
             Job _job = jobQueue.poll();
             if (_job != null && (servers != null && !servers.isEmpty())) { // check there is a job and servers are not
                                                                            // empty
-                Server _server = servers.get(schd.getindex());
+                Server _server = getNextServer();
                 sendMessage(String.format("SCHD %s %s %s", _job.number, _server.type, _server.number)); // send
                                                                                                         // scheduling
                 // instrument to server

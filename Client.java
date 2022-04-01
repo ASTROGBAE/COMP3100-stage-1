@@ -54,65 +54,49 @@ public class Client {
                 e.printStackTrace();
             }
             System.out.println("SUCCESS: server OK with AUTH");
+            // read xml attempt
+            try {
+                comms.attemptReadXml();
+            } catch (Exception e) {
+                System.out.println("Exception in attempting to read server xml, printing stack trace...");
+            }
             // job, server and schedule loop
             boolean noJobs = false; // true if attemptGetJob == 0
             boolean firstJob = true; // if just started talking, will need to read in servers the first time...
             int attempt = 1; // attempt log to be incremented each loop
-            try {
-                do {
-                    // get job
-                    try {
-                        switch (comms.attemptGetJob()) { // attempt get job
-                            case 1: // success
-                                System.out.println(String.format("[%s] Job recieved.", attempt));
-                                break;
-                            case 0: // no more jobs
-                                System.out.println(String
-                                        .format("[%s] Server has no more jobs, ending scheduling loop...", attempt));
-                                noJobs = true; // change loop boolean
-                                break;
-                            case -1: // failure
-                                System.out
-                                        .println(String.format("[%s] Job recieve was invalid, trying again.", attempt));
-                                break;
-                        }
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        System.out.println("IOException in attempting to get job, printing stack trace...");
-                        e.printStackTrace();
+            do {
+                // get job
+                try {
+                    switch (comms.attemptGetJob()) { // attempt get job
+                        case 1: // success
+                            System.out.println(String.format("[%s] Job recieved.", attempt));
+                            break;
+                        case 0: // no more jobs
+                            System.out.println(String
+                                    .format("[%s] Server has no more jobs, ending scheduling loop...", attempt));
+                            noJobs = true; // change loop boolean
+                            break;
+                        case -1: // failure
+                            System.out
+                                    .println(String.format("[%s] Job recieve was invalid, trying again.", attempt));
+                            break;
                     }
-                    // get servers, if first time through loop (only first job!)
-                    if (firstJob) {
-                        System.out.println("Attempting to get server list...");
-                        try {
-                            while (!comms.attemptGetServers()) {
-                                System.out.println("Cannot get server list. Trying again...");
-                            }
-                            System.out.println("SUCCESS: server list recieved");
-                        } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            System.out.println("IOException in attempting to get servers, printing stack trace...");
-                            e.printStackTrace();
-                        } catch (Exception e) {
-                            // TODO Auto-generated catch block
-                            System.out.println("Exception in attempting to intialise job scheduler, printing stack trace...");
-                            e.printStackTrace();
-                        }
-                    }
-                    // schedule job
-                    if (!comms.attemptScheduleJob()) {
-                        System.out.println(String.format("[%s] Could not successfully schedule a job", attempt));
-                    }
-                    attempt++; // increment attempt log
-                    if (attempt > 100) {// TODO remove, used for debugging to make sure no infinite looop
-                        noJobs = true;
-                    }
-                } while (!noJobs); // loop while still jobs remaining (i.e. server has no responded 'NONE' to
-                                   // 'REDY')
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    System.out.println("IOException in attempting to get job, printing stack trace...");
+                    e.printStackTrace();
+                }
+                // get servers and attempt to get job
+                try {
+                    comms.attemptScheduleJob();
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    System.out.println("Exception in attempting to schedule job, printing stack trace...");
+                    e.printStackTrace();
+                }
+
+            } while (!noJobs); // loop while still jobs remaining (i.e. server has no responded 'NONE' to
+                               // 'REDY')
             // when no job scheduling done, attempt to close
             System.out.println("Client attempting to quit and close socket...");
             try {

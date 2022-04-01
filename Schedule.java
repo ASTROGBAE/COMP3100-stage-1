@@ -59,30 +59,26 @@ public class Schedule {
 
     // read methods
     // TODO fix throws to be more complicated???
-    public boolean readTypes(String xml) throws ParserConfigurationException, SAXException, IOException {
-        if (xml != null && !xml.isEmpty()) {
-            // read and build xml string
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            InputSource is = new InputSource(new StringReader(xml));
-            // create document for server nodes
-            Document doc = builder.parse(is);
-            // get type nodes...
-            NodeList serverNodes = doc.getElementsByTagName("server");// get server objects
-            // iterate through server nodes, read type into type array
-            for (int i = 0; i < serverNodes.getLength(); i++) { // check each server type
-                Node _server = serverNodes.item(i);
-                if (_server.getNodeType() == Node.ELEMENT_NODE) { // check if element type, need to cast before getting
-                                                                  // element attribute
-                    String type = ((Element) _server).getAttribute("type"); // get attribute "type"
-                    serverType.add(type); // add to server types list
-                }
+    public boolean readTypes() throws ParserConfigurationException, SAXException, IOException {
+        // read and build xml string
+        String configPath = "../ds-sample-config01.xml"; // read if in same folder
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(new File(configPath));
+        // get type nodes...
+        NodeList serverNodes = doc.getElementsByTagName("server");// get server objects
+        // iterate through server nodes, read type into type array
+        for (int i = 0; i < serverNodes.getLength(); i++) { // check each server type
+            Node _server = serverNodes.item(i);
+            if (_server.getNodeType() == Node.ELEMENT_NODE) { // check if element type, need to cast before getting
+                                                              // element attribute
+                String type = ((Element) _server).getAttribute("type"); // get attribute "type"
+                serverType.add(type); // add to server types list
             }
-            idx = serverType.size() - 1;
-            xmlRead = true; // now can call other objects!
-            return true; // done! all read
         }
-        return false; // xml empty or null, return false...
+        idx = serverType.size() - 1;
+        xmlRead = true; // now can call other objects!
+        return true; // done! all read
     }
 
     /**
