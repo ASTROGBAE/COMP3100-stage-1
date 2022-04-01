@@ -1,12 +1,10 @@
 import java.util.ArrayList;
 
 import org.w3c.dom.*;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import javax.xml.parsers.*;
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 
 /**
  * Schedule process psuedocode:
@@ -79,15 +77,5 @@ public class Schedule {
         idx = serverType.size() - 1;
         xmlRead = true; // now can call other objects!
         return true; // done! all read
-    }
-
-    /**
-     * for testing purposes when an xml is not available
-     * 
-     * @return
-     */
-    private boolean readTestArray(ArrayList<String> testArray) {
-        serverType = testArray;
-        return true;
     }
 }
