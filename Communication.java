@@ -69,7 +69,7 @@ public class Communication {
     /**
      * Method handling Preparation phase (REDY <-> DATA)
      * 
-     * @return 1 is job added, 0 if no more jobs, -1 invalid
+     * @return 2 if complete, 1 is job added, 0 if no more jobs, -1 invalid
      * @throws IOException
      */
 
@@ -84,11 +84,14 @@ public class Communication {
             // regex process
             Pattern pattern = Pattern.compile(jobsRegex);
             Matcher matcher = pattern.matcher(msg);
-            if (matcher.group(1).equals("JOBN")) { // check message is valid for server
-                if (matcher.find()) { // group matches
+            if(matcher.find()) {
+                if (matcher.group(1).equals("JOBN")) { // check message is valid for server (JOBN)
                     int jobID = Integer.parseInt(matcher.group(3));
                     jobQueue.add(new Job(jobID)); // add new job to jobs!
                     return 1;
+                }
+                else if (matcher.group(1).equals("JCPL")) { // job finished!
+                    return 2;
                 }
             }
         }
@@ -100,7 +103,7 @@ public class Communication {
         if (servers != null) {
             if (servers.size() == 0) { // if servers have run out, go to next type
                 wipeServers(); // clean servers
-                sendMessage("GETS " + schd.getNextType()); // send message to server to get a server type, increment
+                sendMessage("GETS Type " + schd.getNextType()); // send message to server to get a server type, increment
                                                            // schedule
                 int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
                 sendMessage("OK"); // send confirmation to server, recieved DATA
@@ -138,7 +141,7 @@ public class Communication {
     }
 
     private boolean loadServer(String serverMsg) {
-        String serverRegex = "^(\\w+) (\\d+) .*";
+        String serverRegex = "^([\\w|-]+) (\\d+) .*";
         if (serverMsg != null && serverMsg.matches(serverRegex)) { // check message is valid for server
             String type = "";
             int number = 0;

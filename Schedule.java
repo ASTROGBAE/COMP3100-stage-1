@@ -46,7 +46,7 @@ public class Schedule {
     public String getNextType() {
         if (xmlRead) {
             // decrement idx
-            if (idx <= serverType.size()) {
+            if (idx <= 0) {
                 idx = serverType.size() - 1;
             } else {
                 idx--;
@@ -61,7 +61,7 @@ public class Schedule {
     // TODO fix throws to be more complicated???
     public boolean readTypes() throws ParserConfigurationException, SAXException, IOException {
         // read and build xml string
-        String configPath = "../ds-sample-config01.xml"; // read if in same folder
+        String configPath = "ds-system.xml"; // read if in same folder
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(new File(configPath));

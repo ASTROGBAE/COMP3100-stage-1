@@ -62,12 +62,14 @@ public class Client {
             }
             // job, server and schedule loop
             boolean noJobs = false; // true if attemptGetJob == 0
-            boolean firstJob = true; // if just started talking, will need to read in servers the first time...
             int attempt = 1; // attempt log to be incremented each loop
             do {
                 // get job
                 try {
                     switch (comms.attemptGetJob()) { // attempt get job
+                        case 2: // complete
+                            System.out.println(String.format("[%s] Job completed.", attempt));
+                            break;
                         case 1: // success
                             System.out.println(String.format("[%s] Job recieved.", attempt));
                             break;
@@ -94,7 +96,7 @@ public class Client {
                     System.out.println("Exception in attempting to schedule job, printing stack trace...");
                     e.printStackTrace();
                 }
-
+                attempt ++; // increment log
             } while (!noJobs); // loop while still jobs remaining (i.e. server has no responded 'NONE' to
                                // 'REDY')
             // when no job scheduling done, attempt to close
