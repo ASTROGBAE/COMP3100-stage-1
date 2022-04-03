@@ -104,7 +104,10 @@ public class Client {
                 }
                 // get servers and attempt to get job
                 try {
-                    comms.attemptScheduleJob();
+                    if (!comms.attemptScheduleJob()) {
+                        System.out.println("ERROR: no job or server, closing");
+                        running = false;
+                    }
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     System.out.println("Exception in attempting to schedule job, printing stack trace...");
