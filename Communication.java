@@ -107,13 +107,17 @@ public class Communication {
                                                            // schedule
                 int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
                 sendMessage("OK"); // send confirmation to server, recieved DATA
-                for (int i = 0; i < dataNum; i++) {
-                    loadServer(getMessage()); // load server
+                if (dataNum > 0) {
+                    for (int i = 0; i < dataNum; i++) {
+                        loadServer(getMessage()); // load server
+                    }
+                    sendMessage("OK"); // send confirmation to server, recieved servers
+                    getMessage();
+                    System.out.println("servers recieved and logged");
+                    if (servers.size() > 0) {
+                        return servers.remove(0); // pop initial value
+                    }
                 }
-                sendMessage("OK"); // send confirmation to server, recieved servers
-                getMessage();
-                System.out.println("servers recieved and logged");
-                return servers.remove(0); // pop initial value
             }
         }
         return null;

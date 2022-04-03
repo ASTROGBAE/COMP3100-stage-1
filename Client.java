@@ -41,13 +41,15 @@ public class Client {
                     if (attempt > 10) {
                         System.out.println("Connection attempted timed out, exiting program");
                         running=false;
+                        break;
                     }
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 System.out.println("IOException in attempting HELO, printing stack trace...");
                 e.printStackTrace();
-
+                running=false;
+                break;
             }
             System.out.println("SUCCESS: server OK");
             // Auth attempt
@@ -60,12 +62,15 @@ public class Client {
                     if (attempt > 10) {
                         System.out.println("Connection attempted timed out, exiting program");
                         running=false;
+                        break;
                     }
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 System.out.println("IOException in attempting to get authentication, printing stack trace...");
                 e.printStackTrace();
+                running=false;
+                break;
             }
             System.out.println("SUCCESS: server OK with AUTH");
             // read xml attempt
@@ -73,6 +78,9 @@ public class Client {
                 comms.attemptReadXml();
             } catch (Exception e) {
                 System.out.println("Exception in attempting to read server xml, printing stack trace...");
+                e.printStackTrace();
+                running=false;
+                break;
             }
             // job, server and schedule loop
             boolean noJobs = false; // true if attemptGetJob == 0
@@ -101,17 +109,23 @@ public class Client {
                     // TODO Auto-generated catch block
                     System.out.println("IOException in attempting to get job, printing stack trace...");
                     e.printStackTrace();
+                    running = false;
+                    break;
                 }
                 // get servers and attempt to get job
                 try {
                     if (!comms.attemptScheduleJob()) {
                         System.out.println("ERROR: no job or server, closing");
                         running = false;
+                        break;
                     }
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     System.out.println("Exception in attempting to schedule job, printing stack trace...");
                     e.printStackTrace();
+                    running = false;
+                    break;
+                    
                 }
                 attempt ++; // increment log
             } while (!noJobs); // loop while still jobs remaining (i.e. server has no responded 'NONE' to
@@ -122,15 +136,18 @@ public class Client {
                 int attemptClose = 0;
                 while (!comms.attemptQuitAndClose()) {
                     System.out.println("Quite failed, attempting again... [" + attempt + "].");
-                    attempt++;
-                    if (attempt > 10) {
+                    attemptClose++;
+                    if (attemptClose > 10) {
                         System.out.println("Connection attempted timed out, exiting program");
                         running=false;
+                        break;
                     }
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+                running = false;
+                break;
             }
             running = false;
         }
