@@ -44,13 +44,13 @@ public class Schedule {
     public String getNextType() {
         if (xmlRead) {
             // decrement idx
-            if (idx <= 0) {
+            String next = serverType.get(idx); // next strng to return
+            idx--;
+            if (idx < 0) {
                 idx = serverType.size() - 1;
-            } else {
-                idx--;
             }
             // get server type with index
-            return serverType.get(idx);
+            return next;
         }
         return null; // no xml read yet
     }
@@ -76,6 +76,7 @@ public class Schedule {
         }
         idx = serverType.size() - 1;
         xmlRead = true; // now can call other objects!
+        //System.out.println("Read servers: " + serverType.toString());
         return true; // done! all read
     }
 }

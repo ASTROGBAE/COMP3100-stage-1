@@ -47,7 +47,7 @@ public class Communication {
     }
 
     public Boolean attemptAuth() throws IOException {
-        sendMessage("AUTH: " + user);
+        sendMessage("AUTH " + user);
         return matchResponse("OK");
     }
 
@@ -80,6 +80,7 @@ public class Communication {
         if (msg.equals("NONE")) { // check if message is NONE, means no more jobs
             return 0;
         }
+        //System.out.print("Recieved job msg: " + msg + "...");        
         if (msg != null) {
             // regex process
             Pattern pattern = Pattern.compile(jobsRegex);
@@ -87,38 +88,45 @@ public class Communication {
             if(matcher.find()) {
                 if (matcher.group(1).equals("JOBN")) { // check message is valid for server (JOBN)
                     int jobID = Integer.parseInt(matcher.group(3));
-                    jobQueue.add(new Job(jobID)); // add new job to jobs!
+                    Job j = new Job(jobID);
+                    jobQueue.add(j); // add new job to jobs!
+                    //System.out.println("Job added: " + jobID + ": " + j.toString()); 
                     return 1;
                 }
                 else if (matcher.group(1).equals("JCPL")) { // job finished!
+                    //System.out.println("Job finished!"); 
                     return 2;
                 }
             }
         }
+        //System.out.println("Did not work!"); 
         return -1; // did not work!
     }
 
     private Server getNextServer() throws Exception {
         // check server list
         if (servers != null) {
-            if (servers.size() == 0) { // if servers have run out, go to next type
+            if (servers.isEmpty()) { // if servers have run out, go to next type
+                String next = schd.getNextType();
+                //System.out.print(", " + next);
                 wipeServers(); // clean servers
-                sendMessage("GETS Type " + schd.getNextType()); // send message to server to get a server type, increment
+                sendMessage("GETS Type " + next); // send message to server to get a server type, increment
                                                            // schedule
                 int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
                 sendMessage("OK"); // send confirmation to server, recieved DATA
                 if (dataNum > 0) {
                     for (int i = 0; i < dataNum; i++) {
-                        loadServer(getMessage()); // load server
+                        if (loadServer(getMessage())) {} // load server
                     }
                     sendMessage("OK"); // send confirmation to server, recieved servers
                     getMessage();
-                    System.out.println("servers recieved and logged");
-                    if (servers.size() > 0) {
-                        return servers.remove(0); // pop initial value
-                    }
+                } else {
+                    //System.out.println("No servers! Trying again...");
+                    return null;
                 }
-            }
+            } 
+            //System.out.println("Getting server...: " + servers.get(0).toString());
+            return servers.remove(0);
         }
         return null;
     }
@@ -145,7 +153,7 @@ public class Communication {
     }
 
     private boolean loadServer(String serverMsg) {
-        String serverRegex = "^([\\w|-]+) (\\d+) .*";
+        String serverRegex = "^([^ ]+) (\\d+) .*";
         if (serverMsg != null && serverMsg.matches(serverRegex)) { // check message is valid for server
             String type = "";
             int number = 0;
@@ -157,7 +165,7 @@ public class Communication {
                 number = Integer.parseInt(matcher.group(2));
             }
             servers.add(new Server(number, type)); // add server
-            System.out.println("Server loaded successfully.");
+            //System.out.println("Server loaded successfully.");
             return true; // success!
         }
         return false; // failure
@@ -180,8 +188,13 @@ public class Communication {
                     // TODO how to signal from reply that is was correct sent?
                     getMessage(); // get responce
                     return true;
+                } else {
+                    //System.out.println("No server! Getting server and attempting again...");
                 }
             }
+        } else {
+            //System.out.println("Job queue null or empty!");
+
         }
         return false; // no job to be polled
     }
@@ -202,22 +215,20 @@ public class Communication {
     // methods: printWelcome, getMessage, matchResponse
 
     public void printWelcome() {
-        System.out.println("Greetings " + user);
-        System.out.println(
-                String.format("Target IP: %s Target Port: %s", socket.getInetAddress(), socket.getPort()));
-        System.out.println(
-                String.format("Local IP: %s Local Port: %s", socket.getLocalAddress(), socket.getLocalPort()));
+        //System.out.println("Greetings " + user);
+        //System.out.println(String.format("Target IP: %s Target Port: %s", socket.getInetAddress(), socket.getPort()));
+        //System.out.println(String.format("Local IP: %s Local Port: %s", socket.getLocalAddress(), socket.getLocalPort()));
     }
 
     private void sendMessage(String msg) throws IOException {
         dout.write((msg + "\n").getBytes()); // send OK for jobs
         dout.flush();
-        System.out.println("Sent msg: " + msg);
+        //System.out.println("Sent msg: " + msg);
     }
 
     private String getMessage() throws IOException {
         String msg = din.readLine();
-        System.out.println("Recieved msg: " + msg);
+        //System.out.println("Recieved msg: " + msg);
         return msg;
     }
 
