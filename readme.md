@@ -20,3 +20,9 @@ implement in ds-client.c [1]
 
 - RUN Wireshark and see what the existing client/server do!
 - Write in java, compile like in workshop example!
+
+> command for demos
+template:
+> ./demoS1.sh [Java specific argument...] [-n] your_client.class [your client specific argument...]
+implementation:
+> ./demoS1.sh -n Main.class
