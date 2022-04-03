@@ -113,8 +113,8 @@ public class Communication {
                 sendMessage("OK"); // send confirmation to server, recieved servers
                 getMessage();
                 System.out.println("servers recieved and logged");
+                return servers.remove(0); // pop initial value
             }
-            return servers.remove(0); // pop initial value
         }
         return null;
     }
@@ -169,12 +169,14 @@ public class Communication {
             if (_job != null) { // check there is a job and servers are not
                                 // empty
                 Server _server = getNextServer(); // get server as per what the algorithm in that method states
-                sendMessage(String.format("SCHD %s %s %s", _job.number, _server.type, _server.number)); // send
-                                                                                                        // scheduling
-                // instrument to server
-                // TODO how to signal from reply that is was correct sent?
-                getMessage(); // get responce
-                return true;
+                if (_server != null) {
+                    sendMessage(String.format("SCHD %s %s %s", _job.number, _server.type, _server.number)); // send
+                                                                                                            // scheduling
+                    // instrument to server
+                    // TODO how to signal from reply that is was correct sent?
+                    getMessage(); // get responce
+                    return true;
+                }
             }
         }
         return false; // no job to be polled
