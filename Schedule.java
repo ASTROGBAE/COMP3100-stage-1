@@ -23,14 +23,12 @@ import java.io.IOException;
 public class Schedule {
 
     // tracking variables
-    private int idx;
+    private String largest;
 
     // data structures
-    private ArrayList<String> serverType;
     private boolean xmlRead;
 
     public Schedule() {
-        serverType = new ArrayList<String>();
         xmlRead = false;
     }
 
@@ -42,19 +40,7 @@ public class Schedule {
      *         Null if server xml not read
      */
     public String getNextType() {
-        // if (xmlRead) {
-        //     // decrement idx
-        //     idx --;
-        //     if (idx < 0) {
-        //         idx = serverType.size() -1;
-        //     }
-        //     // get obj
-        //     String next = serverType.get(idx); // next strng to return
-        //     // get server type with index
-        //     System.out.print(next + "[" +idx+ "], ");
-        //     return next;
-        // }
-        return serverType.get(serverType.size()-1); // no xml read yet
+        return largest; // no xml read yet
     }
 
     // read methods
@@ -68,17 +54,20 @@ public class Schedule {
         // get type nodes...
         NodeList serverNodes = doc.getElementsByTagName("server");// get server objects
         // iterate through server nodes, read type into type array
+        int prev_core = 0;
         for (int i = 0; i < serverNodes.getLength(); i++) { // check each server type
             Node _server = serverNodes.item(i);
-            if (_server.getNodeType() == Node.ELEMENT_NODE) { // check if element type, need to cast before getting
+            if (_server.getNodeType() == Node.ELEMENT_NODE) { // check if element type, n(eed to cast before getting
                                                               // element attribute
                 String type = ((Element) _server).getAttribute("type"); // get attribute "type"
-                serverType.add(type); // add to server types list
+                int current_core = Integer.parseInt(((Element) _server).getAttribute("cores")); // get current core to compare to previous
+                if (current_core > prev_core) { // if new biggest server type (do not change if the same)
+                    largest = type;
+                    prev_core = current_core;
+                }
             }
         }
-        idx = serverType.size(); // will decrement in object...
         xmlRead = true; // now can call other objects!
-        System.out.println("Read servers: " + serverType.toString());
         return true; // done! all read
     }
 }

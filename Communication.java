@@ -19,6 +19,7 @@ public class Communication {
     // data structyures
     Schedule schd;
     ArrayList<Server> servers;
+    int serverIdk;
     Queue<Job> jobQueue;
 
     // CONSTRUCTOR
