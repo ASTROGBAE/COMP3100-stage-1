@@ -42,17 +42,19 @@ public class Schedule {
      *         Null if server xml not read
      */
     public String getNextType() {
-        if (xmlRead) {
-            // decrement idx
-            String next = serverType.get(idx); // next strng to return
-            idx--;
-            if (idx < 0) {
-                idx = serverType.size() - 1;
-            }
-            // get server type with index
-            return next;
-        }
-        return null; // no xml read yet
+        // if (xmlRead) {
+        //     // decrement idx
+        //     idx --;
+        //     if (idx < 0) {
+        //         idx = serverType.size() -1;
+        //     }
+        //     // get obj
+        //     String next = serverType.get(idx); // next strng to return
+        //     // get server type with index
+        //     System.out.print(next + "[" +idx+ "], ");
+        //     return next;
+        // }
+        return serverType.get(serverType.size()-1); // no xml read yet
     }
 
     // read methods
@@ -74,9 +76,9 @@ public class Schedule {
                 serverType.add(type); // add to server types list
             }
         }
-        idx = serverType.size() - 1;
+        idx = serverType.size(); // will decrement in object...
         xmlRead = true; // now can call other objects!
-        //System.out.println("Read servers: " + serverType.toString());
+        System.out.println("Read servers: " + serverType.toString());
         return true; // done! all read
     }
 }
