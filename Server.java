@@ -38,6 +38,14 @@ public class Server {
         return serverType + " " + serverID;
     }
 
+    public int getCores() {
+        return core;
+    }
+
+    public String getState() {
+        return state;
+    }
+
     public boolean isValid() {
         return valid;
     }
