@@ -3,12 +3,9 @@ import java.util.regex.Pattern;
 
 public class Server {
 
-    private String serverType, state;
-    private int serverID, curStateTime, core, memory, disk,
-            wJobs, rJobs, failures, totalFailtime, mttf, mttr, madf, lastStartTime; // server parameter fields, need to
-                                                                                    // get these from
-    private Object[] params = { serverType, serverID, state, curStateTime, core, memory, disk,
-            wJobs, rJobs, failures, totalFailtime, mttf, mttr, madf, lastStartTime };
+    private Object[] params = new Object[15];
+        // store objects: serverType, serverID, state, curStateTime, core, memory, disk,
+          //  wJobs, rJobs, failures, totalFailtime, mttf, mttr, madf, lastStartTime;
     private boolean valid = false; // boolean to check if job is valid from input param (jobn)
 
     public Server(String gets) {
@@ -19,11 +16,9 @@ public class Server {
             Pattern pattern = Pattern.compile(serverRegex); // regex process
             Matcher matcher = pattern.matcher(gets);
             if (matcher.find()) { // group matches
-                serverType = matcher.group(1);
-                serverID = Integer.parseInt(matcher.group(2));
                 for (int i = 0; i < params.length; i++) { // loop to enter values via regex
                     if (i == 0 || i == 2) { // if serverType or state (parse string instead of int)
-                        params[i] = Integer.parseInt(matcher.group(i + 1)); // read in all int values
+                        params[i] = matcher.group(i + 1); // read in all string values
                     }
                     params[i] = Integer.parseInt(matcher.group(i + 1)); // read in all int values
                 }
@@ -35,15 +30,15 @@ public class Server {
 
     // fields
     public String getTypeID() {
-        return serverType + " " + serverID;
+        return params[0] + " " + params[1];
     }
 
     public int getCores() {
-        return core;
+        return (int)params[4];
     }
 
     public String getState() {
-        return state;
+        return (String)params[2];
     }
 
     public boolean isValid() {
