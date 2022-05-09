@@ -88,7 +88,6 @@ public class Communication {
             Matcher matcher = pattern.matcher(msg);
             if (matcher.find()) {
                 if (matcher.group(1).equals("JOBN")) { // check message is valid for server (JOBN)
-                    int jobID = Integer.parseInt(matcher.group(3));
                     Job j = new Job(msg);
                     jobQueue.add(j); // add new job to jobs!
                     // System.out.println("Job added: " + jobID + ": " + j.toString());
@@ -104,21 +103,19 @@ public class Communication {
     }
 
     // get server group from GETS capable, operate on new server list...
-    private Server getNextServer() throws Exception {
+    private Server getNextServer(Job job) throws Exception {
         // TODO add check that a job exists in
-        if (!jobQueue.isEmpty()) {
-            Job nextJob = jobQueue.poll();
+        if (job != null) {
             wipeServers(); // clean servers list for next operation
-            sendMessage("GETS Capable " + nextJob.getGetsString()); // send message to server to get a server type,
+            sendMessage("GETS Capable " + job.getGetsString()); // send message to server to get a server type,
                                                                     // increment
             // schedule
             int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
             sendMessage("OK"); // send confirmation to server, recieved DATA
             if (dataNum > 0) {
                 for (int i = 0; i < dataNum; i++) {
-                    if (loadServer(getMessage())) {
-                    } // load server
-                }
+                    loadServer(getMessage());
+                } // load server
                 sendMessage("OK"); // send confirmation to server, recieved servers
                 getMessage();
             } else {
@@ -155,10 +152,13 @@ public class Communication {
         String serverRegex = "^([^ ]+) (\\d+) .*";
         // TODO should regex have .* at the end?
         if (serverMsg != null && serverMsg.matches(serverRegex)) { // check message is valid for server
-            servers.add(new Server(serverMsg)); // add server
-            // System.out.println("Server loaded successfully.");
-            return true; // success!
+            Server s = new Server(serverMsg);
+            if (s.isValid()) {
+                servers.add(new Server(serverMsg)); // add server
+                return true; // success!
+            }
         }
+        System.out.println("WARNING: could not load server");
         return false; // failure
     }
 
@@ -171,9 +171,9 @@ public class Communication {
             Job _job = jobQueue.poll(); // pop job off queue
             if (_job != null) { // check there is a job and servers are not
                                 // empty
-                Server _server = getNextServer(); // get server as per what the algorithm in that method states
+                Server _server = getNextServer(_job); // get server as per what the algorithm in that method states
                 if (_server != null) {
-                    sendMessage(String.format("SCHD %s %s %s", _job.getGetsString(), _server.getTypeID())); // send
+                    sendMessage(String.format("SCHD %s %s", _job.getGetsString(), _server.getTypeID())); // send
                                                                                                             // scheduling
                     // instrument to server
                     // TODO how to signal from reply that is was correct sent?
