@@ -33,4 +33,8 @@ public class Job {
     public boolean isValid() {
         return valid;
     }
+
+    public int getCores() {
+        return params[3];
+    }
 }

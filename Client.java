@@ -73,15 +73,6 @@ public class Client {
                 break;
             }
             //System.out.println("SUCCESS: server OK with AUTH");
-            // read xml attempt
-            try {
-                comms.attemptReadXml();
-            } catch (Exception e) {
-                //System.out.println("Exception in attempting to read server xml, printing stack trace...");
-                e.printStackTrace();
-                running=false;
-                break;
-            }
             // job, server and schedule loop
             boolean jobsRemaining = true; // false if attemptGetJob == 0 or REDY returns NONE
             int attempt = 1; // attempt log to be incremented each loop

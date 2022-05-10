@@ -113,18 +113,19 @@ public class Communication {
             int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
             sendMessage("OK"); // send confirmation to server, recieved DATA
             if (dataNum > 0) {
-                for (int i = 0; i < dataNum; i++) {
+                for (int i = 0; i < dataNum; i++) { // get server list
                     loadServer(getMessage());
                 } // load server
                 sendMessage("OK"); // send confirmation to server, recieved servers
                 getMessage();
+                return schd.getNextServer(servers, job.getCores());
             } else {
                 // System.out.println("No servers! Trying again...");
                 return null;
             }
         }
         // System.out.println("Getting server...: " + servers.get(0).toString());
-        return servers.remove(0);
+        return null;
     }
 
     private Integer getDataAmount(String data) {
@@ -160,10 +161,6 @@ public class Communication {
         }
         System.out.println("WARNING: could not load server");
         return false; // failure
-    }
-
-    public boolean attemptReadXml() throws ParserConfigurationException, SAXException, IOException {
-        return schd.readTypes();
     }
 
     public boolean attemptScheduleJob() throws Exception {
