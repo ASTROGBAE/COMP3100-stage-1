@@ -173,7 +173,7 @@ public class Communication {
                                 // empty
                 Server _server = getNextServer(_job); // get server as per what the algorithm in that method states
                 if (_server != null) {
-                    sendMessage(String.format("SCHD %s %s", _job.getGetsString(), _server.getTypeID())); // send
+                    sendMessage(String.format("SCHD %s %s", _job.getID(), _server.getTypeID())); // send
                                                                                                             // scheduling
                     // instrument to server
                     // TODO how to signal from reply that is was correct sent?
