@@ -4,11 +4,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
 public class Communication {
+
+    // method used options: FC | FF | BF | WF
+    private String method = "FF"; // method options:
 
     // socket fields
     String user;
@@ -17,7 +16,6 @@ public class Communication {
     DataOutputStream dout;
 
     // data structyures
-    Schedule schd;
     ArrayList<Server> servers;
     int serverIdk;
     Queue<Job> jobQueue;
@@ -27,7 +25,6 @@ public class Communication {
     public Communication(Socket _socket) {
         socket = _socket;
         user = System.getProperty("user.name"); // get system name
-        schd = new Schedule();
         jobQueue = new LinkedList<Job>();
         servers = new ArrayList<Server>();
         try {
@@ -108,7 +105,7 @@ public class Communication {
         if (job != null) {
             wipeServers(); // clean servers list for next operation
             sendMessage("GETS Capable " + job.getGetsString()); // send message to server to get a server type,
-                                                                    // increment
+                                                                // increment
             // schedule
             int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
             sendMessage("OK"); // send confirmation to server, recieved DATA
@@ -118,12 +115,16 @@ public class Communication {
                 } // load server
                 sendMessage("OK"); // send confirmation to server, recieved servers
                 getMessage();
+                // sort servers
+                servers.sort((Server a, Server b) -> { // before analysis, sort servers by core size
+                    return a.getCores() - b.getCores(); // TODO should we do this or will it screw up the algorithm??
+                });
                 // TODO moved scheduling information to communication, dunno what else to do
-                if (schd.getMethod().equals("FC")) {
-                    return schd.getNextServer(servers, job.getCores());
-                } else if (schd.getMethod().equals("FF")) {
+                if (method.equals("FC")) {
+                    return servers.get(0);
+                } else if (method.equals("FF")) {
                     for (Server s : servers) { // search servers for valid option
-                        if (s.getState().equals("active") || s.getState().equals("inactive")) { // if readily available
+                        if (serverReady(s)) { // if readily available
                             if (!firstJob) {
                                 sendMessage("LSTJ " + s.getTypeID()); // request list of servers
                                 dataNum = getDataAmount(getMessage()); // get data amount
@@ -133,12 +134,44 @@ public class Communication {
                                 if (dataNum == 0) { // if not waiting jobs, satisfied
                                     return s; // return first fit, if it exists
                                 }
-                            }
-                            else { // if first job
+                            } else { // if first job
                                 return s; // return first fit, if it exists
                             }
                         }
                     }
+                } else if (method.equals("BF") || method.equals("WF")) { // if best fit or worst fit
+                    // (similar algorithms)
+                    Map<Server, Integer> fitServers = new LinkedHashMap<Server, Integer>(); // map fitness values to
+                                                                                            // servers
+                    // fitness value: cores of server-core requirement of job
+                    for (Server s : servers) { // populate fitness map
+                        fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
+                    }
+                    // when fitness values calculated, find best choice
+                    Server target = null; // server to return, not null if a server meets "BF" criteria
+                    for (Server s : servers) { // find target server
+                        if (serverReady(s)) {
+                            if (target == null) { // if no target found, choose first viable option
+                                target = s;
+                            } else { // target not null, choose s if highest store
+                                if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
+                                    target = s; // choose new
+                                }
+                            }
+                        }
+                    }
+                    if (target == null) { // if no server meets above criteria
+                        for (Server s : servers) { // find any server, most valid fitness
+                            if (target == null) { // first runthough, get highest
+                                target = s;
+                            } else { // target not null, valid comparison method
+                                if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
+                                    target = s; // choose new
+                                }
+                            }
+                        }
+                    }
+                    return target;
                 }
             } else {
                 // System.out.println("No servers! Trying again...");
@@ -147,6 +180,21 @@ public class Communication {
         }
         // System.out.println("Getting server...: " + servers.get(0).toString());
         return null;
+    }
+
+    // satisfy first condition of FF: state must be inactive or active second
+    // condition: has sufficient resources (covered by capable command?)
+    private Boolean serverReady(Server s) {
+        return s.getState().equals("active") || s.getState().equals("inactive");
+    }
+
+    // if BF, return '1' if a is bigger. if WF, return '1' if a is smaller.
+    private int fitnessComparison(int aFitness, int bFitness, String method) {
+        if (method.equals("BF")) {
+            return aFitness - bFitness;
+        } else { // == WF
+            return bFitness - aFitness;
+        }
     }
 
     private Integer getDataAmount(String data) {
@@ -189,10 +237,11 @@ public class Communication {
             Job _job = jobQueue.poll(); // pop job off queue
             if (_job != null) { // check there is a job and servers are not
                                 // empty
-                Server _server = getNextServer(_job, _firstJob); // get server as per what the algorithm in that method states
+                Server _server = getNextServer(_job, _firstJob); // get server as per what the algorithm in that method
+                                                                 // states
                 if (_server != null) {
                     sendMessage(String.format("SCHD %s %s", _job.getID(), _server.getTypeID())); // send
-                                                                                                            // scheduling
+                                                                                                 // scheduling
                     // instrument to server
                     // TODO how to signal from reply that is was correct sent?
                     getMessage(); // get responce
