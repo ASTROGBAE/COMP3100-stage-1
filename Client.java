@@ -75,6 +75,7 @@ public class Client {
             //System.out.println("SUCCESS: server OK with AUTH");
             // job, server and schedule loop
             boolean jobsRemaining = true; // false if attemptGetJob == 0 or REDY returns NONE
+            boolean firstJob = true; // true if a job has not been scheduled yet. Used for scheduling logic in communication
             int attempt = 1; // attempt log to be incremented each loop
             do {
                 // get job
@@ -106,8 +107,10 @@ public class Client {
                 if (jobRecieved) { // only run this if a job has been recieved from above!
                     // get servers and attempt to get job
                     try {
-                        if (!comms.attemptScheduleJob()) {
+                        if (!comms.attemptScheduleJob(firstJob)) {
                             //System.out.println("ERROR: could not get job (no server or job), attempting again...");
+                        } else { // if successful job schedule
+                            firstJob = false;
                         }
                     } catch (Exception e) {
                         // TODO Auto-generated catch block

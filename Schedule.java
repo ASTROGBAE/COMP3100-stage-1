@@ -26,13 +26,17 @@ import java.io.IOException;
 public class Schedule {
 
     // method used options: FC | FF | BF | WF
-    private String method = "FC"; // method options:
+    private String method = "FF"; // method options:
 
     public Schedule() {
     }
 
     // methods for stage 2...
     // getCapable: list of servers from DATA return
+
+    public String getMethod() {
+        return method;
+    }
 
     public Server getNextServer(ArrayList<Server> _servers, int reqCores) {
         if (_servers != null && !_servers.isEmpty() && method != null && !method.isEmpty()) {
@@ -43,7 +47,7 @@ public class Schedule {
                 return _servers.get(0);
             } else if (method.equals("FF")) { // first fit
                 for (Server s : _servers) {
-                    if (serverReady(s)) {
+                    if (s.getState().equals("active") || s.getState().equals("inactive")) {
                         return s; // return first fit, if it exists
                     }
                 }

@@ -103,7 +103,7 @@ public class Communication {
     }
 
     // get server group from GETS capable, operate on new server list...
-    private Server getNextServer(Job job) throws Exception {
+    private Server getNextServer(Job job, boolean firstJob) throws Exception {
         // TODO add check that a job exists in
         if (job != null) {
             wipeServers(); // clean servers list for next operation
@@ -118,7 +118,28 @@ public class Communication {
                 } // load server
                 sendMessage("OK"); // send confirmation to server, recieved servers
                 getMessage();
-                return schd.getNextServer(servers, job.getCores());
+                // TODO moved scheduling information to communication, dunno what else to do
+                if (schd.getMethod().equals("FC")) {
+                    return schd.getNextServer(servers, job.getCores());
+                } else if (schd.getMethod().equals("FF")) {
+                    for (Server s : servers) { // search servers for valid option
+                        if (s.getState().equals("active") || s.getState().equals("inactive")) { // if readily available
+                            if (!firstJob) {
+                                sendMessage("LSTJ " + s.getTypeID()); // request list of servers
+                                dataNum = getDataAmount(getMessage()); // get data amount
+                                sendMessage("OK"); // recieve job data
+                                getMessage();
+                                sendMessage("OK");
+                                if (dataNum == 0) { // if not waiting jobs, satisfied
+                                    return s; // return first fit, if it exists
+                                }
+                            }
+                            else { // if first job
+                                return s; // return first fit, if it exists
+                            }
+                        }
+                    }
+                }
             } else {
                 // System.out.println("No servers! Trying again...");
                 return null;
@@ -163,12 +184,12 @@ public class Communication {
         return false; // failure
     }
 
-    public boolean attemptScheduleJob() throws Exception {
+    public boolean attemptScheduleJob(Boolean _firstJob) throws Exception {
         if (jobQueue != null && !jobQueue.isEmpty()) { // check if jobs are empty
             Job _job = jobQueue.poll(); // pop job off queue
             if (_job != null) { // check there is a job and servers are not
                                 // empty
-                Server _server = getNextServer(_job); // get server as per what the algorithm in that method states
+                Server _server = getNextServer(_job, _firstJob); // get server as per what the algorithm in that method states
                 if (_server != null) {
                     sendMessage(String.format("SCHD %s %s", _job.getID(), _server.getTypeID())); // send
                                                                                                             // scheduling
