@@ -108,6 +108,7 @@ public class Communication {
                                                                 // increment
             // schedule
             int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
+            Map<Server, Integer> fitServers = new LinkedHashMap<Server, Integer>(); // map fitness values to servers
             sendMessage("OK"); // send confirmation to server, recieved DATA
             if (dataNum > 0) {
                 for (int i = 0; i < dataNum; i++) { // get server list
@@ -122,7 +123,7 @@ public class Communication {
                 // TODO moved scheduling information to communication, dunno what else to do
                 if (method.equals("FC")) {
                     return servers.get(0);
-                } else if (method.equals("FF")) {
+                } else if (method.equals("FF") || method.equals("BF") || method.equals("WF")) {
                     int jobScheduledDifference = _scheduledJobs; // track how many jobs remaining in order to stop LTSJ
                                                                  // checks or not
                     for (Server s : servers) { // search servers for valid option
@@ -134,8 +135,15 @@ public class Communication {
                                 sendMessage("OK"); // recieve job data
                                 getMessage();
                                 sendMessage("OK");
-                                if (jobNums == 0) { // conditions satisfied (ready and no jobs scheduled)
-                                    return s; // return first fit, if it exists
+                                if (jobNums == 0) { // ALL conditions satisfied (ready and no jobs scheduled)
+                                    // success!
+                                    if (method.equals("FF")) {
+                                        return s; // return first fit, if it exists
+                                    } else { // if BF or WF, simply add to server list to work on it later...
+                                        // fitness value: cores of server-core requirement of job
+                                        // when fitness values calculated, find best choice
+                                        fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
+                                    }
                                 } else { // free of scheduled jobs condition not satisfied, go to next server
                                     jobScheduledDifference -= jobNums; // decrement different of jobs by how many are on
                                                                        // this server
@@ -146,47 +154,41 @@ public class Communication {
                             }
                         }
                     }
-                } else if (method.equals("BF") || method.equals("WF")) { // if best fit or worst fit
-                    // (similar algorithms)
-                    Map<Server, Integer> fitServers = new LinkedHashMap<Server, Integer>(); // map fitness values to
-                                                                                            // servers
-                    // fitness value: cores of server-core requirement of job
-                    for (Server s : servers) { // populate fitness map
-                        fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
-                    }
-                    // when fitness values calculated, find best choice
-                    Server target = null; // server to return, not null if a server meets "BF" criteria
-                    for (Server s : servers) { // find target server
-                        if (serverReady(s)) {
-                            if (target == null) { // if no target found, choose first viable option
-                                target = s;
-                            } else { // target not null, choose s if highest store
-                                if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
-                                    target = s; // choose new
+                    if (!fitServers.isEmpty()) { // server iteration complete, only BF or WF left
+                        Server target = null; // server to return, not null if a server meets "BF" criteria
+                        for (Server s : servers) { // find target server
+                            if (serverReady(s)) {
+                                if (target == null) { // if no target found, choose first viable option
+                                    target = s;
+                                } else { // target not null, choose s if highest store
+                                    if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
+                                        target = s; // choose new
+                                    }
                                 }
                             }
                         }
-                    }
-                    if (target == null) { // if no server meets above criteria
-                        for (Server s : servers) { // find any server, most valid fitness
-                            if (target == null) { // first runthough, get highest
-                                target = s;
-                            } else { // target not null, valid comparison method
-                                if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
-                                    target = s; // choose new
+                        if (target == null) { // if no server meets above criteria
+                            for (Server s : servers) { // find any server, most valid fitness
+                                if (target == null) { // first runthough, get highest
+                                    target = s;
+                                } else { // target not null, valid comparison method
+                                    if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
+                                        target = s; // choose new
+                                    }
                                 }
                             }
                         }
+                        return target; // return target server that meets fitness
                     }
-                    return target;
                 }
-            } else {
-                // System.out.println("No servers! Trying again...");
-                return null;
             }
+        } else {
+            // System.out.println("No servers! Trying again...");
+            return null;
         }
         // System.out.println("Getting server...: " + servers.get(0).toString());
         return null;
+
     }
 
     // satisfy first condition of FF: state must be inactive or active second
