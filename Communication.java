@@ -100,7 +100,7 @@ public class Communication {
     }
 
     // get server group from GETS capable, operate on new server list...
-    private Server getNextServer(Job job, boolean firstJob) throws Exception {
+    private Server getNextServer(Job job, int _scheduledJobs) throws Exception {
         // TODO add check that a job exists in
         if (job != null) {
             wipeServers(); // clean servers list for next operation
@@ -123,18 +123,25 @@ public class Communication {
                 if (method.equals("FC")) {
                     return servers.get(0);
                 } else if (method.equals("FF")) {
+                    int jobScheduledDifference = _scheduledJobs; // track how many jobs remaining in order to stop LTSJ
+                                                                 // checks or not
                     for (Server s : servers) { // search servers for valid option
                         if (serverReady(s)) { // if readily available
-                            if (!firstJob) {
+                            if (jobScheduledDifference > 0) { // if jobs are scheduled but not account for in
+                                                              // search...
                                 sendMessage("LSTJ " + s.getTypeID()); // request list of servers
-                                dataNum = getDataAmount(getMessage()); // get data amount
+                                int jobNums = getDataAmount(getMessage()); // get data amount
                                 sendMessage("OK"); // recieve job data
                                 getMessage();
                                 sendMessage("OK");
-                                if (dataNum == 0) { // if not waiting jobs, satisfied
+                                if (jobNums == 0) { // conditions satisfied (ready and no jobs scheduled)
                                     return s; // return first fit, if it exists
+                                } else { // free of scheduled jobs condition not satisfied, go to next server
+                                    jobScheduledDifference -= jobNums; // decrement different of jobs by how many are on
+                                                                       // this server
+                                    continue; // go to next server in list
                                 }
-                            } else { // if first job
+                            } else { // if first job, don't worry about job scheduling on servers
                                 return s; // return first fit, if it exists
                             }
                         }
@@ -232,13 +239,14 @@ public class Communication {
         return false; // failure
     }
 
-    public boolean attemptScheduleJob(Boolean _firstJob) throws Exception {
+    public boolean attemptScheduleJob(int _scheduledJobs) throws Exception {
         if (jobQueue != null && !jobQueue.isEmpty()) { // check if jobs are empty
             Job _job = jobQueue.poll(); // pop job off queue
             if (_job != null) { // check there is a job and servers are not
                                 // empty
-                Server _server = getNextServer(_job, _firstJob); // get server as per what the algorithm in that method
-                                                                 // states
+                Server _server = getNextServer(_job, _scheduledJobs); // get server as per what the algorithm
+                                                                      // in that method
+                // states
                 if (_server != null) {
                     sendMessage(String.format("SCHD %s %s", _job.getID(), _server.getTypeID())); // send
                                                                                                  // scheduling
