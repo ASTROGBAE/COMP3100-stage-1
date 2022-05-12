@@ -107,17 +107,12 @@ public class Communication {
             sendMessage("GETS Capable " + job.getGetsString()); // send message to server to get a server type,
                                                                 // increment
             // schedule
-            Integer dataNum = getDataAmount(getMessage()); // get amount of data from message if available
-
-            System.out.println(dataNum); 
+            String[] rawServerData = getData(getMessage()); // get amount of data from message if available
             Map<Server, Integer> fitServers = new LinkedHashMap<Server, Integer>(); // map fitness values to servers
-            sendMessage("OK"); // send confirmation to server, recieved DATA
-            if (dataNum > 0) {
-                for (int i = 0; i < dataNum; i++) { // get server list
-                    loadServer(getMessage());
-                } // load server
-                sendMessage("OK"); // send confirmation to server, recieved servers
-                getMessage();
+            if (rawServerData != null && rawServerData.length > 0) {
+                for (String s : rawServerData) { // convert server raw data into server list
+                    loadServer(s);
+                } 
                 // sort servers
                 servers.sort((Server a, Server b) -> { // before analysis, sort servers by core size
                     return a.getCores() - b.getCores(); // TODO should we do this or will it screw up the algorithm??
@@ -133,11 +128,8 @@ public class Communication {
                             if (jobScheduledDifference > 0) { // if jobs are scheduled but not account for in
                                                               // search...
                                 sendMessage("LSTJ " + s.getTypeID()); // request list of servers
-                                int jobNums = getDataAmount(getMessage()); // get data amount
-                                sendMessage("OK"); // recieve job data
-                                getMessage();
-                                sendMessage("OK");
-                                if (jobNums == 0) { // ALL conditions satisfied (ready and no jobs scheduled)
+                                String[] rawJobsData = getData(getMessage()); // get data amount
+                                if (rawJobsData != null && rawJobsData.length == 0) { // ALL conditions satisfied (ready and no jobs scheduled)
                                     // success!
                                     if (method.equals("FF")) {
                                         return s; // return first fit, if it exists
@@ -147,7 +139,7 @@ public class Communication {
                                         fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
                                     }
                                 } else { // free of scheduled jobs condition not satisfied, go to next server
-                                    jobScheduledDifference -= jobNums; // decrement different of jobs by how many are on
+                                    jobScheduledDifference -= rawJobsData.length; // decrement different of jobs by how many are on
                                                                        // this server
                                     continue; // go to next server in list
                                 }
@@ -155,6 +147,8 @@ public class Communication {
                                 return s; // return first fit, if it exists
                             }
                         }
+                    } if (method.equals("FF")) { // if no valid job found for FF, simply take the first availble option.
+                        return servers.get(0);
                     }
                     if (!fitServers.isEmpty()) { // server iteration complete, only BF or WF left
                         Server target = null; // server to return, not null if a server meets "BF" criteria
@@ -208,21 +202,30 @@ public class Communication {
         }
     }
 
-    private Integer getDataAmount(String data) {
-        // server
+    private String[] getData(String data) throws IOException {
         System.out.println(data);
         String dataRegex = "^DATA (\\d+) .*";
-        if (data == null || !data.matches(dataRegex)) { // responce doesnt match, end
-            return null;
-        }
         // regex process
         Pattern pattern = Pattern.compile(dataRegex);
         Matcher matcher = pattern.matcher(data);
-        if (matcher.find()) { // group matches
-            return Integer.parseInt(matcher.group(1)); // number of servers to add, parsed from regex SUCCESS!
-        } else {
+        if (data == null | !matcher.find()) { // group matches
             return null;
+        } 
+        // if data is valid, continue
+        int dataNum = Integer.parseInt(matcher.group(1)); // number of data items to add
+        String[] dataList = new String[dataNum]; // list of valid data strings to return
+        if (dataNum <= 0) {
+            sendMessage("OK"); // recieve job data (will be ".")
+            getMessage();
+        } else { // data number > 0, meaning something exists to be recorded!
+            sendMessage("OK"); // confirm to send over job info (will be newlines of length dataNum)
+            for (int i = 0; i < dataNum; i++) {
+                dataList[i] = getMessage(); // read in reposonce
+            }
+            sendMessage("OK"); // confirm data is recieved, answer will be "."
+            getMessage();
         }
+        return dataList;
     }
 
     private boolean wipeServers() {
