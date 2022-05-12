@@ -79,7 +79,7 @@ public class Client {
             // System.out.println("SUCCESS: server OK with AUTH");
             // job, server and schedule loop
             boolean jobsRemaining = true; // false if attemptGetJob == 0 or REDY returns NONE
-            int scheduledJobs = 0; // tally of active jobs to indicate when to request job status (LTSJ) or not
+            int scheduledJobs = 0; // tally of active jobs to indicate when to request job status (LSTJ) or not
             int attempt = 1; // attempt log to be incremented each loop
             do {
                 // get job

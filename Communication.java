@@ -107,7 +107,9 @@ public class Communication {
             sendMessage("GETS Capable " + job.getGetsString()); // send message to server to get a server type,
                                                                 // increment
             // schedule
-            int dataNum = getDataAmount(getMessage()); // get amount of data from message if available
+            Integer dataNum = getDataAmount(getMessage()); // get amount of data from message if available
+
+            System.out.println(dataNum); 
             Map<Server, Integer> fitServers = new LinkedHashMap<Server, Integer>(); // map fitness values to servers
             sendMessage("OK"); // send confirmation to server, recieved DATA
             if (dataNum > 0) {
@@ -124,7 +126,7 @@ public class Communication {
                 if (method.equals("FC")) {
                     return servers.get(0);
                 } else if (method.equals("FF") || method.equals("BF") || method.equals("WF")) {
-                    int jobScheduledDifference = _scheduledJobs; // track how many jobs remaining in order to stop LTSJ
+                    int jobScheduledDifference = _scheduledJobs; // track how many jobs remaining in order to stop LSTJ
                                                                  // checks or not
                     for (Server s : servers) { // search servers for valid option
                         if (serverReady(s)) { // if readily available
@@ -208,6 +210,7 @@ public class Communication {
 
     private Integer getDataAmount(String data) {
         // server
+        System.out.println(data);
         String dataRegex = "^DATA (\\d+) .*";
         if (data == null || !data.matches(dataRegex)) { // responce doesnt match, end
             return null;
