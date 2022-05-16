@@ -126,8 +126,8 @@ public class Communication {
                     for (int i = 0; i < servers.size(); i ++) { // search servers for valid option
                         Server s = servers.get(i); // define current server object to asses
                         if (serverReady(s)) { // if readily available
-                            if (jobScheduledDifference > 0) { // if jobs are scheduled but not account for in
-                                                              // search...
+                            if (jobScheduledDifference > 0 && i != servers.size()-1) { // if jobs are scheduled but not account for in
+                                                              // search, or not last option in list of capable servers
                                 sendMessage("LSTJ " + s.getTypeID()); // request list of servers
                                 String[] rawJobsData = getData(getMessage()); // get data amount
                                 if (rawJobsData != null && rawJobsData.length == 0) { // ALL conditions satisfied (ready and no jobs scheduled)
@@ -139,8 +139,6 @@ public class Communication {
                                         // when fitness values calculated, find best choice
                                         fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
                                     }
-                                } else if (i == servers.size()-1) { // if not valid but last option, pick it!
-                                    return s;
                                 } else { // free of scheduled jobs condition not satisfied, go to next server
                                     jobScheduledDifference -= rawJobsData.length; // decrement different of jobs by how many are on
                                                                        // this server
