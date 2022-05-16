@@ -123,8 +123,8 @@ public class Communication {
                 } else if (method.equals("FF") || method.equals("BF") || method.equals("WF")) {
                     int jobScheduledDifference = _scheduledJobs; // track how many jobs remaining in order to stop LSTJ
                                                                  // checks or not
-                    for (Server s : servers) { // search servers for valid option
-                        System.out.println("["+jobScheduledDifference+" - "+_scheduledJobs+"]");
+                    for (int i = 0; i < servers.size(); i ++) { // search servers for valid option
+                        Server s = servers.get(i); // define current server object to asses
                         if (serverReady(s)) { // if readily available
                             if (jobScheduledDifference > 0) { // if jobs are scheduled but not account for in
                                                               // search...
@@ -139,6 +139,8 @@ public class Communication {
                                         // when fitness values calculated, find best choice
                                         fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
                                     }
+                                } else if (i == servers.size()-1) { // if not valid but last option, pick it!
+                                    return s;
                                 } else { // free of scheduled jobs condition not satisfied, go to next server
                                     jobScheduledDifference -= rawJobsData.length; // decrement different of jobs by how many are on
                                                                        // this server
