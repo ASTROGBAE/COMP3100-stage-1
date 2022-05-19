@@ -4,8 +4,8 @@ import java.util.regex.Pattern;
 public class Server {
 
     private Object[] params = new Object[15];
-        // store objects: serverType, serverID, state, curStateTime, core, memory, disk,
-          //  wJobs, rJobs, failures, totalFailtime, mttf, mttr, madf, lastStartTime;
+    // store objects: serverType, serverID, state, curStateTime, core, memory, disk,
+    // wJobs, rJobs, failures, totalFailtime, mttf, mttr, madf, lastStartTime;
     private int getParamLength = 9; // buffer for objects read in initialisation
     private boolean valid = false; // boolean to check if job is valid from input param (jobn)
 
@@ -36,11 +36,15 @@ public class Server {
     }
 
     public int getCores() {
-        return (int)params[4];
+        return (int) params[4];
     }
 
     public String getState() {
-        return (String)params[2];
+        return (String) params[2];
+    }
+
+    public String getCurStartTime() {
+        return (String) params[3];
     }
 
     public boolean isValid() {

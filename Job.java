@@ -22,8 +22,16 @@ public class Job {
         }
     }
 
+    public int getsubmitTime() {
+        return params[0];
+    }
+
     public int getID() {
         return params[1];
+    }
+
+    public int getEstRuntime() {
+        return params[2];
     }
 
     public String getGetsString() {
