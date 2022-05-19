@@ -112,42 +112,54 @@ public class Communication {
             if (rawServerData != null && rawServerData.length > 0) {
                 for (String s : rawServerData) { // convert server raw data into server list
                     loadServer(s);
-                } 
+                }
                 // sort servers
                 servers.sort((Server a, Server b) -> { // before analysis, sort servers by core size
                     return a.getCores() - b.getCores(); // TODO should we do this or will it screw up the algorithm??
                 });
-                // TODO moved scheduling information to communication, dunno what else to do
+                // first capable option
                 if (method.equals("FC")) {
                     return servers.get(0);
-                } else if (method.equals("FF") || method.equals("BF") || method.equals("WF")) {
+                }
+                // prune out servers that are not ready
+                for (int i = 0; i < servers.size(); i++) {
+                    if (!serverReady(servers.get(i))) {
+                        servers.remove(i);
+                        i--;
+                    }
+                }
+                // iterate through ready server list
+                if (method.equals("FF") || method.equals("BF") || method.equals("WF")) {
                     int jobScheduledDifference = _scheduledJobs; // track how many jobs remaining in order to stop LSTJ
                                                                  // checks or not
-                    for (Server s : servers) { // search servers for valid option
-                        if (serverReady(s)) { // if readily available
-                            if (jobScheduledDifference > 0) { // if jobs are scheduled but not account for in
-                                                              // search...
-                                sendMessage("LSTJ " + s.getTypeID()); // request list of servers
-                                String[] rawJobsData = getData(getMessage()); // get data amount
-                                if (rawJobsData != null && rawJobsData.length == 0) { // ALL conditions satisfied (ready and no jobs scheduled)
-                                    // success!
-                                    if (method.equals("FF")) {
-                                        return s; // return first fit, if it exists
-                                    } else { // if BF or WF, simply add to server list to work on it later...
-                                        // fitness value: cores of server-core requirement of job
-                                        // when fitness values calculated, find best choice
-                                        fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
-                                    }
-                                } else { // free of scheduled jobs condition not satisfied, go to next server
-                                    jobScheduledDifference -= rawJobsData.length; // decrement different of jobs by how many are on
-                                                                       // this server
-                                    continue; // go to next server in list
+                    for (int i = 0; i < servers.size(); i++) { // search servers for valid option
+                        Server s = servers.get(i); // define current server object to asses
+                        if (jobScheduledDifference > 0 && i != servers.size() - 1) { // if jobs are scheduled but not
+                                                                                     // account for in
+                            // search, or not last option in list of capable servers
+                            sendMessage("LSTJ " + s.getTypeID()); // request list of servers
+                            String[] rawJobsData = getData(getMessage()); // get data amount
+                            if (rawJobsData != null && rawJobsData.length == 0) { // ALL conditions satisfied (ready and
+                                                                                  // no jobs scheduled)
+                                // success!
+                                if (method.equals("FF")) {
+                                    return s; // return first fit, if it exists
+                                } else { // if BF or WF, simply add to server list to work on it later...
+                                    // fitness value: cores of server-core requirement of job
+                                    // when fitness values calculated, find best choice
+                                    fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
                                 }
-                            } else { // if first job, don't worry about job scheduling on servers
-                                return s; // return first fit, if it exists
+                            } else { // free of scheduled jobs condition not satisfied, go to next server
+                                jobScheduledDifference -= rawJobsData.length; // decrement different of jobs by how many
+                                                                              // are on
+                                // this server
+                                continue; // go to next server in list
                             }
+                        } else { // if first job, don't worry about job scheduling on servers
+                            return s; // return first fit, if it exists
                         }
-                    } if (method.equals("FF")) { // if no valid job found for FF, simply take the first availble option.
+                    }
+                    if (method.equals("FF")) { // if no valid job found for FF, simply take the first availble option.
                         return servers.get(0);
                     }
                     if (!fitServers.isEmpty()) { // server iteration complete, only BF or WF left
@@ -190,7 +202,8 @@ public class Communication {
     // satisfy first condition of FF: state must be inactive or active second
     // condition: has sufficient resources (covered by capable command?)
     private Boolean serverReady(Server s) {
-        return s.getState().equals("active") || s.getState().equals("inactive");
+        return s.getState().equals("active") || s.getState().equals("inactive")
+                || s.getState().equals("booting");
     }
 
     // if BF, return '1' if a is bigger. if WF, return '1' if a is smaller.
@@ -203,14 +216,13 @@ public class Communication {
     }
 
     private String[] getData(String data) throws IOException {
-        System.out.println(data);
         String dataRegex = "^DATA (\\d+) .*";
         // regex process
         Pattern pattern = Pattern.compile(dataRegex);
         Matcher matcher = pattern.matcher(data);
         if (data == null | !matcher.find()) { // group matches
             return null;
-        } 
+        }
         // if data is valid, continue
         int dataNum = Integer.parseInt(matcher.group(1)); // number of data items to add
         String[] dataList = new String[dataNum]; // list of valid data strings to return
@@ -243,7 +255,7 @@ public class Communication {
                 return true; // success!
             }
         }
-        System.out.println("WARNING: could not load server");
+        // System.out.println("WARNING: could not load server");
         return false; // failure
     }
 
