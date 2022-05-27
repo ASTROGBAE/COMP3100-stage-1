@@ -8,12 +8,14 @@ public class Server {
     // store objects: serverType, serverID, state, curStateTime, core, memory, disk,
     // wJobs, rJobs, failures, totalFailtime, mttf, mttr, madf, lastStartTime;
     private int getParamLength = 9; // buffer for objects read in initialisation
+    private int totalTurnaroundTime;
     private boolean valid = false; // boolean to check if job is valid from input param (jobn)
     private ArrayList<Schedule> schedules; // schedules of each job currently operating on the server
 
     public Server(String gets) {
         // by default, the GETS command will get data for type to rjobs (failures to
         // lastStartTime not included)
+        totalTurnaroundTime = 0; // init total list of turnaround times
         schedules = new ArrayList<Schedule>(); // init schedule list
         String serverRegex = "^([^ ]+) (\\d+) (inactive|booting|idle|active|unavailable) -?(\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+)";
         if (gets != null && !gets.isEmpty() && gets.matches(serverRegex)) { // check gets is valid for server
@@ -54,15 +56,43 @@ public class Server {
         return valid;
     }
 
+    // set total turnaround times of each schedule, if they exist
+    public void setTotalTurnaroundTime() {
+        if (!schedules.isEmpty()) {
+            int total = 0;
+            for (Schedule s : schedules) {
+                total += s.turnaroundTime;
+            }
+            totalTurnaroundTime = total; // update new turnaround time
+        } else { // if empty simply return booting time, 0
+            switch (getState()) {
+                case ("booting"): // add from
+                case ("inactive"):
+                    totalTurnaroundTime = Integer.parseInt(getCurStartTime()); // beginning of start time from booting
+                    break;
+                case ("unavailable"): // add VERY high weight, not good
+                    totalTurnaroundTime = 9999999; // beginning of start time from booting
+                    break;
+                default: // if idle or active
+                    totalTurnaroundTime = 0; // means server is good to go!
+            }
+        }
+    }
+
     // get total turnaround times of each schedule, if they exist
-    public int getTotalWaitingTime() {
-        if (schedules.isEmpty()) {
-            return 0;
+    public int getTotalTurnaroundTime() {
+        return totalTurnaroundTime;
+    }
+
+    // add new schedule to list
+    public void addSchedule(Schedule _schedule) {
+        schedules.add(_schedule);
+    }
+
+    // remove first schedule from the list (FIFO)
+    public void removeSchedule() {
+        if (!schedules.isEmpty()) {
+            schedules.remove(schedules.size() - 1);
         }
-        int total = 0;
-        for (Schedule s : schedules) {
-            total += s.turnaroundTime;
-        }
-        return total;
     }
 }

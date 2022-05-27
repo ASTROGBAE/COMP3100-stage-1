@@ -6,9 +6,6 @@ import java.util.regex.Pattern;
 
 public class Communication {
 
-    // method used options: FC | FF | BF | WF
-    private String method = "FF"; // method options:
-
     // socket fields
     String user;
     Socket socket;
@@ -108,87 +105,21 @@ public class Communication {
                                                                 // increment
             // schedule
             String[] rawServerData = getData(getMessage()); // get amount of data from message if available
-            Map<Server, Integer> fitServers = new LinkedHashMap<Server, Integer>(); // map fitness values to servers
             if (rawServerData != null && rawServerData.length > 0) {
                 for (String s : rawServerData) { // convert server raw data into server list
                     loadServer(s);
                 }
-                // sort servers
+                // iterate through server list and update turnaround times based on queued jobs
+                for (Server server : servers) {
+                    server.setTotalTurnaroundTime();
+                }
+                // sort servers by increasing turnarouround time
                 servers.sort((Server a, Server b) -> { // before analysis, sort servers by core size
-                    return a.getCores() - b.getCores(); // TODO should we do this or will it screw up the algorithm??
+                    return a.getTotalTurnaroundTime() - b.getTotalTurnaroundTime();
                 });
-                // first capable option
-                if (method.equals("FC")) {
-                    return servers.get(0);
-                }
-                // prune out servers that are not ready
-                for (int i = 0; i < servers.size(); i++) {
-                    if (!serverReady(servers.get(i))) {
-                        servers.remove(i);
-                        i--;
-                    }
-                }
-                // iterate through ready server list
-                if (method.equals("FF") || method.equals("BF") || method.equals("WF")) {
-                    int jobScheduledDifference = _scheduledJobs; // track how many jobs remaining in order to stop LSTJ
-                                                                 // checks or not
-                    for (int i = 0; i < servers.size(); i++) { // search servers for valid option
-                        Server s = servers.get(i); // define current server object to asses
-                        if (jobScheduledDifference > 0 && i != servers.size() - 1) { // if jobs are scheduled but not
-                                                                                     // account for in
-                            // search, or not last option in list of capable servers
-                            sendMessage("LSTJ " + s.getTypeID()); // request list of servers
-                            String[] rawJobsData = getData(getMessage()); // get data amount
-                            if (rawJobsData != null && rawJobsData.length == 0) { // ALL conditions satisfied (ready and
-                                                                                  // no jobs scheduled)
-                                // success!
-                                if (method.equals("FF")) {
-                                    return s; // return first fit, if it exists
-                                } else { // if BF or WF, simply add to server list to work on it later...
-                                    // fitness value: cores of server-core requirement of job
-                                    // when fitness values calculated, find best choice
-                                    fitServers.put((Server) s, (int) (s.getCores() - job.getCores()));
-                                }
-                            } else { // free of scheduled jobs condition not satisfied, go to next server
-                                jobScheduledDifference -= rawJobsData.length; // decrement different of jobs by how many
-                                                                              // are on
-                                // this server
-                                continue; // go to next server in list
-                            }
-                        } else { // if first job, don't worry about job scheduling on servers
-                            return s; // return first fit, if it exists
-                        }
-                    }
-                    if (method.equals("FF")) { // if no valid job found for FF, simply take the first availble option.
-                        return servers.get(0);
-                    }
-                    if (!fitServers.isEmpty()) { // server iteration complete, only BF or WF left
-                        Server target = null; // server to return, not null if a server meets "BF" criteria
-                        for (Server s : servers) { // find target server
-                            if (serverReady(s)) {
-                                if (target == null) { // if no target found, choose first viable option
-                                    target = s;
-                                } else { // target not null, choose s if highest store
-                                    if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
-                                        target = s; // choose new
-                                    }
-                                }
-                            }
-                        }
-                        if (target == null) { // if no server meets above criteria
-                            for (Server s : servers) { // find any server, most valid fitness
-                                if (target == null) { // first runthough, get highest
-                                    target = s;
-                                } else { // target not null, valid comparison method
-                                    if (fitnessComparison(fitServers.get(s), fitServers.get(target), method) == 1) {
-                                        target = s; // choose new
-                                    }
-                                }
-                            }
-                        }
-                        return target; // return target server that meets fitness
-                    }
-                }
+                // add sheduled job to server schedule list for first in list
+                servers.get(0).addSchedule(new Schedule(job, servers.get(0)));
+                return servers.get(0); // return the first value with the smallest turnaround time
             }
         } else {
             // System.out.println("No servers! Trying again...");
@@ -197,22 +128,6 @@ public class Communication {
         // System.out.println("Getting server...: " + servers.get(0).toString());
         return null;
 
-    }
-
-    // satisfy first condition of FF: state must be inactive or active second
-    // condition: has sufficient resources (covered by capable command?)
-    private Boolean serverReady(Server s) {
-        return s.getState().equals("active") || s.getState().equals("inactive")
-                || s.getState().equals("booting");
-    }
-
-    // if BF, return '1' if a is bigger. if WF, return '1' if a is smaller.
-    private int fitnessComparison(int aFitness, int bFitness, String method) {
-        if (method.equals("BF")) {
-            return aFitness - bFitness;
-        } else { // == WF
-            return bFitness - aFitness;
-        }
     }
 
     private String[] getData(String data) throws IOException {

@@ -89,6 +89,7 @@ public class Client {
                         case 2: // complete
                             // System.out.println(String.format("[%s] Job completed.", attempt));
                             scheduledJobs--; // one job off schedule
+                            // TODO add logic for removing a job when complete
                             break;
                         case 1: // success
                             // System.out.println(String.format("[%s] Job recieved.", attempt));

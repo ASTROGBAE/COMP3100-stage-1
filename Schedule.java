@@ -23,7 +23,7 @@ public class Schedule {
                 waitingTime = 9999999; // beginning of start time from booting
                 break;
             default: // if idle or active
-                waitingTime = _server.getTotalWaitingTime(); // get total turnaround time present in server
+                waitingTime = _server.getTotalTurnaroundTime(); // get total turnaround time present in server
         }
         startTime = submitTime + waitingTime; // TODO is this right?
         endTime = job.getEstRuntime(); // TODO should I base off of estimated runtime?
