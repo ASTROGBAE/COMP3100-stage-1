@@ -75,7 +75,7 @@ public class Communication {
         if (msg.equals("NONE")) { // check if message is NONE, means no more jobs
             return 0;
         }
-        // System.out.print("Recieved job msg: " + msg + "...");
+        System.out.print("Recieved job msg: " + msg + "...");
         if (msg != null) {
             // regex process
             Pattern pattern = Pattern.compile(jobsRegex);
@@ -84,10 +84,10 @@ public class Communication {
                 if (matcher.group(1).equals("JOBN")) { // check message is valid for server (JOBN)
                     Job j = new Job(msg);
                     jobQueue.add(j); // add new job to jobs!
-                    // System.out.println("Job added: " + jobID + ": " + j.toString());
+                    System.out.println("Job added: " + j.getID() + ": " + j.toString());
                     return 1;
                 } else if (matcher.group(1).equals("JCPL")) { // job finished!
-                    // System.out.println("Job finished!");
+                    System.out.println("Job finished!");
                     return 2;
                 }
             }
@@ -100,6 +100,7 @@ public class Communication {
     private Server getNextServer(Job job, boolean firstJob) throws Exception {
         // TODO add check that a job exists in
         if (job != null) {
+            System.out.println("Attempting to get next server for job " + job.getID());
             wipeServers(); // clean servers list for next operation
             sendMessage("GETS Capable " + job.getGetsString()); // send message to server to get a server type,
                                                                 // increment
@@ -134,10 +135,10 @@ public class Communication {
                 return servers.get(0); // return the first value with the smallest turnaround time
             }
         } else {
-            // System.out.println("No servers! Trying again...");
+            System.out.println("No servers! Trying again...");
             return null;
         }
-        // System.out.println("Getting server...: " + servers.get(0).toString());
+        System.out.println("Getting server...: " + servers.get(0).toString());
         return null;
 
     }
