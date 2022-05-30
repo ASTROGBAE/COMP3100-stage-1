@@ -48,8 +48,8 @@ public class Server {
         return (String) params[2];
     }
 
-    public String getCurStartTime() {
-        return (String) params[3];
+    public int getCurStartTime() {
+        return (int) params[3];
     }
 
     public boolean isValid() {
@@ -68,7 +68,7 @@ public class Server {
             switch (getState()) {
                 case ("booting"): // add from
                 case ("inactive"):
-                    totalTurnaroundTime = Integer.parseInt(getCurStartTime()); // beginning of start time from booting
+                    totalTurnaroundTime = getCurStartTime(); // beginning of start time from booting
                     break;
                 case ("unavailable"): // add VERY high weight, not good
                     totalTurnaroundTime = 9999999; // beginning of start time from booting

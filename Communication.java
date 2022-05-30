@@ -108,23 +108,24 @@ public class Communication {
             String[] rawServerData = getData(getMessage()); // get amount of data from message if available
             if (rawServerData != null && rawServerData.length > 0) {
                 for (String s : rawServerData) { // convert server raw data into server list
+                    System.out.println("Capable server: " + s);
                     loadServer(s);
                 }
                 // iterate through server list and populate schedule (need to do this each time
                 // as servers are wiped each it)
+                System.out.println("-------");
                 for (Server server : servers) {
+                    System.out.println("LSTJ for: " + server.getTypeID());
                     sendMessage("LSTJ " + server.getTypeID()); // get current job data
                     String[] rawJobData = getData(getMessage()); // get amount of data from message if available
+                    System.out.println("Raw server data: " + rawJobData);
                     if (rawJobData != null && rawJobData.length != 0) {
                         for (String jobStr : rawJobData) {
+                            sendMessage("Added schedule: " + jobStr); // get current job data
                             server.addSchedule(new Schedule(new Job(jobStr), server));
                         }
                     }
                     server.setTotalTurnaroundTime(); // calculate turnaround time based on populated schedule
-                }
-                // iterate through server list and update turnaround times based on queued jobs
-                for (Server server : servers) {
-                    server.setTotalTurnaroundTime();
                 }
                 // sort servers by increasing turnarouround time
                 servers.sort((Server a, Server b) -> { // before analysis, sort servers by core size

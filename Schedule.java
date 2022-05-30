@@ -17,7 +17,7 @@ public class Schedule {
         switch (_server.getState()) {
             case ("booting"): // add from
             case ("inactive"):
-                waitingTime = Integer.parseInt(_server.getCurStartTime()); // beginning of start time from booting
+                waitingTime = _server.getCurStartTime(); // beginning of start time from booting
                 break;
             case ("unavailable"): // add VERY high weight, not good
                 waitingTime = 9999999; // beginning of start time from booting
