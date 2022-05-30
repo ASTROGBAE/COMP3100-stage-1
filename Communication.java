@@ -97,7 +97,7 @@ public class Communication {
     }
 
     // get server group from GETS capable, operate on new server list...
-    private Server getNextServer(Job job, int _scheduledJobs) throws Exception {
+    private Server getNextServer(Job job, boolean firstJob) throws Exception {
         // TODO add check that a job exists in
         if (job != null) {
             wipeServers(); // clean servers list for next operation
@@ -108,6 +108,18 @@ public class Communication {
             if (rawServerData != null && rawServerData.length > 0) {
                 for (String s : rawServerData) { // convert server raw data into server list
                     loadServer(s);
+                }
+                // iterate through server list and populate schedule (need to do this each time
+                // as servers are wiped each it)
+                for (Server server : servers) {
+                    sendMessage("LSTJ " + server.getTypeID()); // get current job data
+                    String[] rawJobData = getData(getMessage()); // get amount of data from message if available
+                    if (rawJobData != null && rawJobData.length != 0) {
+                        for (String jobStr : rawJobData) {
+                            server.addSchedule(new Schedule(new Job(jobStr), server));
+                        }
+                    }
+                    server.setTotalTurnaroundTime(); // calculate turnaround time based on populated schedule
                 }
                 // iterate through server list and update turnaround times based on queued jobs
                 for (Server server : servers) {
@@ -174,13 +186,13 @@ public class Communication {
         return false; // failure
     }
 
-    public boolean attemptScheduleJob(int _scheduledJobs) throws Exception {
+    public boolean attemptScheduleJob(boolean _firstJob) throws Exception {
         if (jobQueue != null && !jobQueue.isEmpty()) { // check if jobs are empty
             Job _job = jobQueue.poll(); // pop job off queue
             if (_job != null) { // check there is a job and servers are not
                                 // empty
-                Server _server = getNextServer(_job, _scheduledJobs); // get server as per what the algorithm
-                                                                      // in that method
+                Server _server = getNextServer(_job, _firstJob); // get server as per what the algorithm
+                                                                 // in that method
                 // states
                 if (_server != null) {
                     sendMessage(String.format("SCHD %s %s", _job.getID(), _server.getTypeID())); // send

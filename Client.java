@@ -79,7 +79,7 @@ public class Client {
             // System.out.println("SUCCESS: server OK with AUTH");
             // job, server and schedule loop
             boolean jobsRemaining = true; // false if attemptGetJob == 0 or REDY returns NONE
-            int scheduledJobs = 0; // tally of active jobs to indicate when to request job status (LSTJ) or not
+            boolean firstJob = true;
             int attempt = 1; // attempt log to be incremented each loop
             do {
                 // get job
@@ -88,7 +88,6 @@ public class Client {
                     switch (comms.attemptGetJob()) { // attempt get job
                         case 2: // complete
                             // System.out.println(String.format("[%s] Job completed.", attempt));
-                            scheduledJobs--; // one job off schedule
                             // TODO add logic for removing a job when complete
                             break;
                         case 1: // success
@@ -116,8 +115,8 @@ public class Client {
                 if (jobRecieved) { // only run this if a job has been recieved from above!
                     // get servers and attempt to get job
                     try {
-                        if (comms.attemptScheduleJob(scheduledJobs)) {
-                            scheduledJobs++; // one job scheduled...
+                        if (comms.attemptScheduleJob(firstJob)) {
+                            firstJob = false; // set firstJob to false
                         }
                     } catch (Exception e) {
                         // TODO Auto-generated catch block
