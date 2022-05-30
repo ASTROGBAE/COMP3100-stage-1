@@ -7,8 +7,6 @@
 // choose the performance value which is lowest (highest? idk)
 
 public class Schedule {
-    Job job;
-    Server server;
     int submitTime, waitingTime, startTime, endTime, turnaroundTime, rentalCost, resourceUtil;
 
     public Schedule(Job _job, Server _server) {
@@ -26,7 +24,7 @@ public class Schedule {
                 waitingTime = _server.getTotalTurnaroundTime(); // get total turnaround time present in server
         }
         startTime = submitTime + waitingTime; // TODO is this right?
-        endTime = job.getEstRuntime(); // TODO should I base off of estimated runtime?
+        endTime = _job.getEstRuntime(); // TODO should I base off of estimated runtime?
         turnaroundTime = startTime + endTime;
         rentalCost = 0; // TODO complete
         resourceUtil = 0;

@@ -121,8 +121,9 @@ public class Communication {
                     System.out.println("Raw server data: " + rawJobData);
                     if (rawJobData != null && rawJobData.length != 0) {
                         for (String jobStr : rawJobData) {
-                            sendMessage("Added schedule: " + jobStr); // get current job data
-                            server.addSchedule(new Schedule(new Job(jobStr), server));
+                            System.out.println("Added schedule: " + jobStr); // get current job data
+                            Job j = new Job(jobStr); // create new job
+                            server.addSchedule(new Schedule(j, server)); // add job to server
                         }
                     }
                     server.setTotalTurnaroundTime(); // calculate turnaround time based on populated schedule
@@ -131,15 +132,13 @@ public class Communication {
                 servers.sort((Server a, Server b) -> { // before analysis, sort servers by core size
                     return a.getTotalTurnaroundTime() - b.getTotalTurnaroundTime();
                 });
-                // add sheduled job to server schedule list for first in list
-                servers.get(0).addSchedule(new Schedule(job, servers.get(0)));
                 return servers.get(0); // return the first value with the smallest turnaround time
             }
         } else {
             System.out.println("No servers! Trying again...");
             return null;
         }
-        System.out.println("Getting server...: " + servers.get(0).toString());
+        System.out.println("Raw server data is null or empty, cannot complete task");
         return null;
 
     }
