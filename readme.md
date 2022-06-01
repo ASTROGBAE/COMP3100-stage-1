@@ -8,4 +8,4 @@ Author: Gabriel Bretthauer, 44853866
 
 - place .class files from \bin in the simulation space
 - run with:
-  > ./demoS1.sh -n Main.class
+  > ./stage2-test-x86 "java Main [-a algo_name]" -o tt -n
